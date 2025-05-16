@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5173")
+        builder.WithOrigins("http://localhost:5173", "capacitor://localhost")
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials();
@@ -69,6 +69,12 @@ app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) =>
     return Results.Ok();
 })
 .WithOpenApi()
+.RequireAuthorization();
+
+app.MapPost("/addWorkout", () =>
+{
+
+})
 .RequireAuthorization();
 
 app.Run();

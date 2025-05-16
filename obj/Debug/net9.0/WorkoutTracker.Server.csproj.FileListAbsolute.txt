@@ -144,3 +144,4 @@
 /Users/jacob/Projects/WorkoutTracker/WorkoutTracker.Server/obj/Debug/net9.0/WorkoutTracker.Server.pdb
 /Users/jacob/Projects/WorkoutTracker/WorkoutTracker.Server/obj/Debug/net9.0/WorkoutTracker.Server.genruntimeconfig.cache
 /Users/jacob/Projects/WorkoutTracker/WorkoutTracker.Server/obj/Debug/net9.0/ref/WorkoutTracker.Server.dll
+/Users/jacob/Projects/WorkoutTracker/WorkoutTracker.Server/obj/Debug/net9.0/WorkoutTracker.Server.sourcelink.json
