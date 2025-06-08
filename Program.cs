@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using WorkoutTracker.Server.Extensions;
 using WorkoutTracker.Server.Middleware;
 using WorkoutTracker.Server.Models;
+using WorkoutTracker.Server.Routes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,11 +72,7 @@ app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) =>
 .WithOpenApi()
 .RequireAuthorization();
 
-app.MapPost("/addWorkout", () =>
-{
-
-})
-.RequireAuthorization();
+app.MapWorkoutRoutes();
 
 app.Run();
 
