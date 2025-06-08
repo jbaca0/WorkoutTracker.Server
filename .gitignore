@@ -1,2 +1,4 @@
 bin/
 obj/
+WorkoutTracker.db
+WorkoutTracker.db*
