@@ -1,5 +1,5 @@
 using System;
-using WorkoutTracker.Server.EndpointHandlers;
+using WorkoutTracker.Server.Handlers;
 using WorkoutTracker.Server.Models;
 
 namespace WorkoutTracker.Server.Routes;

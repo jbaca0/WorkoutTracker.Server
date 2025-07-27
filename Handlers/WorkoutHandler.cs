@@ -2,7 +2,7 @@ using System;
 using WorkoutTracker.Server.Extensions;
 using WorkoutTracker.Server.Models;
 
-namespace WorkoutTracker.Server.EndpointHandlers;
+namespace WorkoutTracker.Server.Handlers;
 
 public static class WorkoutHandler
 {
