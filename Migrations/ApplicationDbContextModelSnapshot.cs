@@ -227,7 +227,7 @@ namespace WorkoutTracker.Server.Migrations
 
                     b.HasIndex("WorkoutId");
 
-                    b.ToTable("Exercise");
+                    b.ToTable("Exercises");
                 });
 
             modelBuilder.Entity("WorkoutTracker.Server.Models.ExerciseInfo", b =>

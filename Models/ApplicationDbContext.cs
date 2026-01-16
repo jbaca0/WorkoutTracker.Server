@@ -9,6 +9,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 {
     public DbSet<Workout> Workouts { get; set; }
     public DbSet<ExerciseInfo> ExerciseInfos { get; set; }
+    public DbSet<Exercise> Exercises { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
         base(options)
     { }
