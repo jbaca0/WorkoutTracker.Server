@@ -1,16 +1,26 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using WorkoutTracker.Server.Authorization;
 using WorkoutTracker.Server.Extensions;
 using WorkoutTracker.Server.Middleware;
 using WorkoutTracker.Server.Models;
+using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Routes;
+using WorkoutTracker.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
 builder.Services.AddDbContext<ApplicationDbContext>();
+builder.Services.AddRepositories();
+
 builder.Services.AddAuthorization();
+builder.Services.AddResourceAuthorization();
+
+builder.Services.AddScoped<UserExerciseInfoService>();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -35,6 +45,7 @@ builder.Services.AddCors(options =>
                .AllowCredentials();
     });
 });
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -56,26 +67,6 @@ app.UseSessionUserId();
 
 app.MapIdentityApi<IdentityUser>();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", (HttpContext context) =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.RequireAuthorization();
-
 app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) =>
 {
     await signInManager.SignOutAsync();
@@ -89,7 +80,3 @@ app.MapExerciseInfoRoutes();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

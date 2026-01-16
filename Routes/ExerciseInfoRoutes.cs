@@ -9,5 +9,6 @@ public static class ExerciseInfoRoutes
     {
         // Map the route for adding exercise information
         app.MapPost("/addExerciseInfo", ExerciseInfoHandler.AddExerciseInfo);
+        app.MapGet("/getExerciseInfos", ExerciseInfoHandler.GetExerciseInfos);
     }
 }
