@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using WorkoutTracker.Server.Enums;
 
 namespace WorkoutTracker.Server.DataTransferObjects.Common;
 
@@ -6,13 +8,6 @@ public class ExerciseInfo
 {
     public string name { get; set; } = string.Empty;
     public Guid id { get; set; } = Guid.Empty;
-
-    public static ExerciseInfo BuildFromModel(Models.ExerciseInfo exerciseInfo)
-    {
-        return new ExerciseInfo()
-        {
-            id = exerciseInfo.Id,
-            name = exerciseInfo.Name
-        };
-    }
+    public MuscleGroup primaryMuscleGroup { get; set; } = MuscleGroup.None;
+    public List<string> secondaryMuscleGroups { get; set; } = new();
 }

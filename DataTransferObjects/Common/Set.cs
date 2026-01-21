@@ -4,6 +4,7 @@ namespace WorkoutTracker.Server.DataTransferObjects.Common;
 
 public class Set
 {
+    public Guid? id { get; set; }
     public int reps { get; set; }
     public decimal weight { get; set; }
 
@@ -11,6 +12,7 @@ public class Set
     {
         return new Set()
         {
+            id = set.Id,
             reps = set.Reps,
             weight = set.Weight
         };

@@ -39,4 +39,14 @@ public class Set
             Weight = data.weight
         };
     }
+
+    public DataTransferObjects.Common.Set ToData()
+    {
+        return new DataTransferObjects.Common.Set
+        {
+            id = Id,
+            reps = Reps,
+            weight = Weight
+        };
+    }
 }

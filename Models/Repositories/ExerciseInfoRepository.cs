@@ -21,4 +21,19 @@ public class ExerciseInfoRepository
 
         return modelExerciseInfos.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
     }
+
+    public async Task<List<DomainObjects.ExerciseInfo>> GetAllAsync()
+    {
+        var modelExerciseInfos = await dbContext.ExerciseInfos
+            .ToListAsync();
+
+        return modelExerciseInfos.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
+    }
+
+    public async Task<bool> Add(DomainObjects.ExerciseInfo exerciseInfo)
+    {
+        dbContext.ExerciseInfos.Add(exerciseInfo.ToModel());
+        var entriesAdded = await dbContext.SaveChangesAsync();
+        return entriesAdded > 0;
+    }
 }
