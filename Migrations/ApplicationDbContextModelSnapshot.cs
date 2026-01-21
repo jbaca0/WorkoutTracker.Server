@@ -240,6 +240,16 @@ namespace WorkoutTracker.Server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PrimaryMuscleGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("SecondaryMuscleGroupsJson")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("[]");
+
                     b.HasKey("Id");
 
                     b.ToTable("ExerciseInfos");
@@ -264,7 +274,7 @@ namespace WorkoutTracker.Server.Migrations
 
                     b.HasIndex("ExerciseId");
 
-                    b.ToTable("Set");
+                    b.ToTable("Sets");
                 });
 
             modelBuilder.Entity("WorkoutTracker.Server.Models.Workout", b =>

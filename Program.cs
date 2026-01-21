@@ -35,11 +35,17 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5173", "capacitor://localhost")
+        builder.WithOrigins("http://localhost:5173", "https://localhost:5173", "capacitor://localhost")
                .AllowAnyMethod()
                .AllowAnyHeader()
                .AllowCredentials();
@@ -60,8 +66,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.UseCors();
+app.UseHttpsRedirection();
 app.UseSession();
 app.UseSessionUserId();
 

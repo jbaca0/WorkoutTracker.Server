@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Server.DataTransferObjects.Responses;
+using WorkoutTracker.Server.DataTransferObjects.Responses.Workout;
 using WorkoutTracker.Server.DataTransferObjects.Requests;
 using WorkoutTracker.Server.Extensions;
 using WorkoutTracker.Server.Models;
@@ -125,5 +126,58 @@ public static class WorkoutHandler
             return Results.BadRequest();
         }
         return Results.Ok();
+    }
+
+    public static async Task<IResult> GetWorkoutHistory(
+        HttpContext context,
+        WorkoutRepository workoutRepository)
+    {
+        var userId = context.User.GetUserId();
+        var workouts = await workoutRepository.GetWorkoutsWithSummaryAsync(userId);
+
+        var summaries = workouts.Select(w => new DataTransferObjects.Common.WorkoutSummary
+        {
+            id = w.Id,
+            addDateTime = w.AddDateTime,
+            exerciseCount = w.Exercises.Count,
+            exerciseNames = w.Exercises.Take(3).Select(e => e.ExerciseInfo.Name).ToList()
+        }).ToList();
+
+        return Results.Ok(new GetWorkoutHistoryResponse { workouts = summaries });
+    }
+
+    public static async Task<IResult> GetWorkoutDetail(
+        Guid workoutId,
+        WorkoutRepository workoutRepository)
+    {
+        var workout = await workoutRepository.GetWorkoutWithDetailsAsync(workoutId);
+
+        if (workout == null)
+        {
+            return Results.NotFound();
+        }
+
+        var workoutDto = new DataTransferObjects.Common.Workout
+        {
+            id = workout.Id,
+            addDateTime = workout.AddDateTime,
+            exercises = workout.Exercises.Select(e => new DataTransferObjects.Common.Exercise
+            {
+                exerciseInfoId = e.ExerciseInfoId,
+                exerciseInfo = new DataTransferObjects.Common.ExerciseInfo
+                {
+                    id = e.ExerciseInfo.Id,
+                    name = e.ExerciseInfo.Name
+                },
+                sets = e.Sets.Select(s => new DataTransferObjects.Common.Set
+                {
+                    id = s.Id,
+                    reps = s.Reps,
+                    weight = s.Weight
+                }).ToList()
+            }).ToList()
+        };
+
+        return Results.Ok(new GetWorkoutDetailResponse { workout = workoutDto });
     }
 }

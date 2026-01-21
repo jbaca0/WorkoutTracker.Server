@@ -27,5 +27,10 @@ public static class WorkoutRoutes
 
         workoutOwnerGroup.MapPost("/save", WorkoutHandler.Save);
 
+        workoutOwnerGroup.MapGet("/getWorkoutDetail/{workoutId}", WorkoutHandler.GetWorkoutDetail);
+
+        app.MapGet("/getWorkoutHistory", WorkoutHandler.GetWorkoutHistory)
+            .RequireAuthorization();
+
     }
 }

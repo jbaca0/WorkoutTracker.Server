@@ -43,4 +43,14 @@ public class Exercise
             Sets = exercise.sets?.Select(Set.FromData).ToList() ?? new List<Set>()
         };
     }
+
+    public DataTransferObjects.Common.Exercise ToData()
+    {
+        return new DataTransferObjects.Common.Exercise
+        {
+            exerciseInfoId = ExerciseInfoId,
+            exerciseInfo = ExerciseInfo?.ToData(),
+            sets = Sets?.Select(s => s.ToData()).ToList() ?? new List<DataTransferObjects.Common.Set>()
+        };
+    }
 }
