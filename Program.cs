@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Authorization;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using WorkoutTracker.Server.Authorization;
-using WorkoutTracker.Server.Extensions;
-using WorkoutTracker.Server.Middleware;
 using WorkoutTracker.Server.Models;
 using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Routes;
@@ -21,6 +21,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddResourceAuthorization();
 
 builder.Services.AddScoped<UserExerciseInfoService>();
+builder.Services.AddScoped<JwtService>();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -32,13 +33,31 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireLowercase = false;
 });
 
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.ConfigureApplicationCookie(options =>
+// Configure JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"]!;
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
+var jwtAudience = builder.Configuration["Jwt:Audience"]!;
+
+builder.Services.AddAuthentication(options =>
 {
-    options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+    };
 });
 
 builder.Services.AddCors(options =>
@@ -47,15 +66,8 @@ builder.Services.AddCors(options =>
     {
         builder.WithOrigins("http://localhost:5173", "https://localhost:5173", "capacitor://localhost")
                .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials();
+               .AllowAnyHeader();
     });
-});
-
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
 var app = builder.Build();
@@ -68,21 +80,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 app.UseHttpsRedirection();
-app.UseSession();
-app.UseSessionUserId();
 
-app.MapIdentityApi<IdentityUser>();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapPost("/logout", async (SignInManager<IdentityUser> signInManager) =>
-{
-    await signInManager.SignOutAsync();
-    return Results.Ok();
-})
-.WithOpenApi()
-.RequireAuthorization();
-
+app.MapAuthRoutes();
 app.MapWorkoutRoutes();
 app.MapExerciseInfoRoutes();
 
 app.Run();
-
