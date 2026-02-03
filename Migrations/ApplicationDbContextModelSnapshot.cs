@@ -255,6 +255,36 @@ namespace WorkoutTracker.Server.Migrations
                     b.ToTable("ExerciseInfos");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("WorkoutTracker.Server.Models.Set", b =>
                 {
                     b.Property<Guid>("Id")
@@ -364,6 +394,17 @@ namespace WorkoutTracker.Server.Migrations
                     b.Navigation("ExerciseInfo");
 
                     b.Navigation("Workout");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.RefreshToken", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WorkoutTracker.Server.Models.Set", b =>
