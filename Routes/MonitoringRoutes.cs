@@ -1,3 +1,5 @@
+using WorkoutTracker.Server.Handlers;
+
 namespace WorkoutTracker.Server.Routes;
 
 public static class MonitoringRoutes
@@ -7,6 +9,9 @@ public static class MonitoringRoutes
         var group = app.MapGroup("/monitoring");
 
         group.MapGet("/status", () => Results.Ok(new { status = "running" }))
+            .WithOpenApi();
+
+        group.MapGet("/logs", LogHandler.GetLogs)
             .WithOpenApi();
     }
 }
