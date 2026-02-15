@@ -84,6 +84,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapMonitoringRoutes();
 app.MapAuthRoutes();
 app.MapWorkoutRoutes();
 app.MapExerciseInfoRoutes();
