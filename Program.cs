@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using WorkoutTracker.Server.Authorization;
+using WorkoutTracker.Server.Logging;
+using WorkoutTracker.Server.Middleware;
 using WorkoutTracker.Server.Models;
 using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Routes;
@@ -71,6 +73,11 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.Services.GetRequiredService<ILoggerFactory>()
+    .AddProvider(new DatabaseLoggerProvider(app.Services, app.Configuration));
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

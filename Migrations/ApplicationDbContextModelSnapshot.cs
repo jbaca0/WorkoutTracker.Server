@@ -255,6 +255,39 @@ namespace WorkoutTracker.Server.Migrations
                     b.ToTable("ExerciseInfos");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.LogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Exception")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LogLevel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.ToTable("LogEntries");
+                });
+
             modelBuilder.Entity("WorkoutTracker.Server.Models.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
