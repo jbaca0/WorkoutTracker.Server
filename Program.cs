@@ -66,7 +66,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5173", "https://localhost:5173", "capacitor://localhost")
+        builder.WithOrigins("https://localhost:5173", "https://localhost:5174", "capacitor://localhost")
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
