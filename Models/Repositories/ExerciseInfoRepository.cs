@@ -30,10 +30,39 @@ public class ExerciseInfoRepository
         return modelExerciseInfos.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
     }
 
+    public async Task<DomainObjects.ExerciseInfo?> GetByIdAsync(Guid id)
+    {
+        var model = await dbContext.ExerciseInfos.FindAsync(id);
+        return model != null ? DomainObjects.ExerciseInfo.FromModel(model) : null;
+    }
+
     public async Task<bool> Add(DomainObjects.ExerciseInfo exerciseInfo)
     {
         dbContext.ExerciseInfos.Add(exerciseInfo.ToModel());
         var entriesAdded = await dbContext.SaveChangesAsync();
         return entriesAdded > 0;
+    }
+
+    public async Task Update(DomainObjects.ExerciseInfo exerciseInfo)
+    {
+        var existing = await dbContext.ExerciseInfos.FindAsync(exerciseInfo.Id);
+        if (existing == null) return;
+
+        var updated = exerciseInfo.ToModel();
+        existing.Name = updated.Name;
+        existing.PrimaryMuscleGroup = updated.PrimaryMuscleGroup;
+        existing.SecondaryMuscleGroupsJson = updated.SecondaryMuscleGroupsJson;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<bool> Delete(Guid id)
+    {
+        var existing = await dbContext.ExerciseInfos.FindAsync(id);
+        if (existing == null) return false;
+
+        dbContext.ExerciseInfos.Remove(existing);
+        await dbContext.SaveChangesAsync();
+        return true;
     }
 }

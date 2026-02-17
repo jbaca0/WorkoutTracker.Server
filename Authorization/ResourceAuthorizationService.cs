@@ -15,6 +15,9 @@ public static class ResourceAuthorizationService
         {
             options.AddPolicy("WorkoutOwner", policy =>
                 policy.Requirements.Add(new WorkoutOwnerRequirement()));
+
+            options.AddPolicy("AdminOnly", policy =>
+                policy.RequireRole("Admin"));
         });
 
 

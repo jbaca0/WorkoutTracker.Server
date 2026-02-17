@@ -22,6 +22,7 @@ public class LogEntryRepository
         string? level = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        string? search = null,
         int limit = 100,
         int offset = 0)
     {
@@ -44,6 +45,13 @@ public class LogEntryRepository
             query = query.Where(l => l.Timestamp <= endDate.Value);
         }
 
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(l =>
+                EF.Functions.Like(l.Message, $"%{search}%") ||
+                EF.Functions.Like(l.Category, $"%{search}%"));
+        }
+
         var totalCount = await query.CountAsync();
 
         var logs = await query
@@ -53,5 +61,10 @@ public class LogEntryRepository
             .ToListAsync();
 
         return (logs.Select(DomainObjects.LogEntry.FromModel).ToList(), totalCount);
+    }
+
+    public async Task<int> DeleteAllAsync()
+    {
+        return await dbContext.LogEntries.ExecuteDeleteAsync();
     }
 }
