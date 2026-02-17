@@ -11,25 +11,24 @@ public static class LogHandler
         string? level = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
+        string? search = null,
         int limit = 100,
         int offset = 0)
     {
-        var (logs, totalCount) = await logEntryRepository.GetLogsAsync(level, startDate, endDate, limit, offset);
+        var (logs, totalCount) = await logEntryRepository.GetLogsAsync(level, startDate, endDate, search, limit, offset);
 
         var response = new GetLogsResponse
         {
-            logs = logs.Select(l => new DataTransferObjects.Common.LogEntry
-            {
-                id = l.Id,
-                timestamp = l.Timestamp,
-                logLevel = l.LogLevel,
-                category = l.Category,
-                message = l.Message,
-                exception = l.Exception
-            }).ToList(),
+            logs = logs.Select(l => l.ToData()).ToList(),
             totalCount = totalCount
         };
 
         return Results.Ok(response);
+    }
+
+    public static async Task<IResult> DeleteAllLogs(LogEntryRepository logEntryRepository)
+    {
+        await logEntryRepository.DeleteAllAsync();
+        return Results.Ok();
     }
 }
