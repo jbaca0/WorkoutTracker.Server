@@ -74,6 +74,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+await app.SeedAdminAsync();
+
 app.Services.GetRequiredService<ILoggerFactory>()
     .AddProvider(new DatabaseLoggerProvider(app.Services, app.Configuration));
 
@@ -95,5 +97,6 @@ app.MapMonitoringRoutes();
 app.MapAuthRoutes();
 app.MapWorkoutRoutes();
 app.MapExerciseInfoRoutes();
+app.MapAdminRoutes();
 
 app.Run();

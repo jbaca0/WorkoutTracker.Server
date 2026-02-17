@@ -29,7 +29,8 @@ public static class AuthHandler
             return Results.Unauthorized();
         }
 
-        var accessToken = jwtService.GenerateAccessToken(user);
+        var roles = await userManager.GetRolesAsync(user);
+        var accessToken = jwtService.GenerateAccessToken(user, roles);
         var refreshToken = jwtService.GenerateRefreshToken();
 
         var refreshTokenEntity = new RefreshToken
@@ -47,7 +48,8 @@ public static class AuthHandler
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = jwtService.GetAccessTokenExpiration()
+            ExpiresAt = jwtService.GetAccessTokenExpiration(),
+            Roles = roles.ToList()
         });
     }
 
@@ -75,7 +77,8 @@ public static class AuthHandler
         storedToken.IsRevoked = true;
 
         // Generate new tokens
-        var newAccessToken = jwtService.GenerateAccessToken(user);
+        var roles = await userManager.GetRolesAsync(user);
+        var newAccessToken = jwtService.GenerateAccessToken(user, roles);
         var newRefreshToken = jwtService.GenerateRefreshToken();
 
         var newRefreshTokenEntity = new RefreshToken
@@ -93,7 +96,8 @@ public static class AuthHandler
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
-            ExpiresAt = jwtService.GetAccessTokenExpiration()
+            ExpiresAt = jwtService.GetAccessTokenExpiration(),
+            Roles = roles.ToList()
         });
     }
 

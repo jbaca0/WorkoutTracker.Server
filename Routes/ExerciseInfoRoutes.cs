@@ -7,8 +7,9 @@ public static class ExerciseInfoRoutes
 {
     public static void MapExerciseInfoRoutes(this WebApplication app)
     {
-        // Map the route for adding exercise information
-        app.MapPost("/addExerciseInfo", ExerciseInfoHandler.AddExerciseInfo);
-        app.MapGet("/getExerciseInfos", ExerciseInfoHandler.GetExerciseInfos);
+        app.MapPost("/addExerciseInfo", ExerciseInfoHandler.AddExerciseInfo)
+            .RequireAuthorization("AdminOnly");
+        app.MapGet("/getExerciseInfos", ExerciseInfoHandler.GetExerciseInfos)
+            .RequireAuthorization();
     }
 }
