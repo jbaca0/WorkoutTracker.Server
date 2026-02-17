@@ -24,6 +24,19 @@ public class LogEntry
         };
     }
 
+    public DataTransferObjects.Common.LogEntry ToData()
+    {
+        return new DataTransferObjects.Common.LogEntry
+        {
+            id = Id,
+            timestamp = Timestamp,
+            logLevel = LogLevel,
+            category = Category,
+            message = Message,
+            exception = Exception
+        };
+    }
+
     public static LogEntry FromModel(Models.LogEntry model)
     {
         return new LogEntry

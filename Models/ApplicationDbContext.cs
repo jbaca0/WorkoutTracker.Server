@@ -20,7 +20,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite(@"Data Source=./WorkoutTracker.db");
+        => options.UseSqlite(@"Data Source=./WorkoutTracker.db;Foreign Keys=True");
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
