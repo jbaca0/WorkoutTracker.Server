@@ -148,7 +148,9 @@ public static class WorkoutHandler
 
     public static async Task<IResult> GetWorkoutDetail(
         Guid workoutId,
-        WorkoutRepository workoutRepository)
+        ClaimsPrincipal user,
+        WorkoutRepository workoutRepository,
+        ExerciseRepository exerciseRepository)
     {
         var workout = await workoutRepository.GetWorkoutWithDetailsAsync(workoutId);
 
@@ -157,24 +159,50 @@ public static class WorkoutHandler
             return Results.NotFound();
         }
 
+        var userId = user.GetUserId();
+        var exerciseInfoIds = workout.Exercises.Select(e => e.ExerciseInfoId).Distinct().ToList();
+        var previousExercises = exerciseInfoIds.Count > 0
+            ? await exerciseRepository.GetLatestExercisesForUserAsync(userId, exerciseInfoIds)
+            : new List<DomainObjects.Exercise>();
+        var previousByInfoId = previousExercises.ToDictionary(e => e.ExerciseInfoId);
+
         var workoutDto = new DataTransferObjects.Common.Workout
         {
             id = workout.Id,
             addDateTime = workout.AddDateTime,
-            exercises = workout.Exercises.Select(e => new DataTransferObjects.Common.Exercise
+            exercises = workout.Exercises.Select(e =>
             {
-                exerciseInfoId = e.ExerciseInfoId,
-                exerciseInfo = new DataTransferObjects.Common.ExerciseInfo
+                var exerciseDto = new DataTransferObjects.Common.Exercise
                 {
-                    id = e.ExerciseInfo.Id,
-                    name = e.ExerciseInfo.Name
-                },
-                sets = e.Sets.Select(s => new DataTransferObjects.Common.Set
+                    exerciseInfoId = e.ExerciseInfoId,
+                    exerciseInfo = new DataTransferObjects.Common.ExerciseInfo
+                    {
+                        id = e.ExerciseInfo.Id,
+                        name = e.ExerciseInfo.Name
+                    },
+                    sets = e.Sets.Select(s => new DataTransferObjects.Common.Set
+                    {
+                        id = s.Id,
+                        reps = s.Reps,
+                        weight = s.Weight,
+                        completed = s.Completed
+                    }).ToList()
+                };
+
+                if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev))
                 {
-                    id = s.Id,
-                    reps = s.Reps,
-                    weight = s.Weight
-                }).ToList()
+                    exerciseDto.previousExercise = new DataTransferObjects.Common.Exercise
+                    {
+                        exerciseInfoId = prev.ExerciseInfoId,
+                        sets = prev.Sets.Select(s => new DataTransferObjects.Common.Set
+                        {
+                            reps = s.Reps,
+                            weight = s.Weight
+                        }).ToList()
+                    };
+                }
+
+                return exerciseDto;
             }).ToList()
         };
 
