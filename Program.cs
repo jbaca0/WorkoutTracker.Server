@@ -68,9 +68,14 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("https://localhost:5173", "https://localhost:5174", "capacitor://localhost")
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        builder.WithOrigins(
+            "https://localhost:5173",
+            "https://localhost:5174",
+            "capacitor://localhost",
+            "https://victorious-smoke-09e74db1e.1.azurestaticapps.net"
+        )
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
