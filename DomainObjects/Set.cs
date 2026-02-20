@@ -8,6 +8,7 @@ public class Set
     public Guid ExerciseId { get; set; }
     public int Reps { get; set; }
     public decimal Weight { get; set; }
+    public bool Completed { get; set; }
 
     public static Set FromModel(Models.Set model)
     {
@@ -16,7 +17,8 @@ public class Set
             Id = model.Id,
             ExerciseId = model.ExerciseId,
             Reps = model.Reps,
-            Weight = model.Weight
+            Weight = model.Weight,
+            Completed = model.Completed
         };
     }
 
@@ -27,7 +29,8 @@ public class Set
             Id = Id,
             ExerciseId = ExerciseId,
             Reps = Reps,
-            Weight = Weight
+            Weight = Weight,
+            Completed = Completed
         };
     }
 
@@ -36,7 +39,8 @@ public class Set
         return new Set
         {
             Reps = data.reps,
-            Weight = data.weight
+            Weight = data.weight,
+            Completed = data.completed
         };
     }
 
@@ -46,7 +50,8 @@ public class Set
         {
             id = Id,
             reps = Reps,
-            weight = Weight
+            weight = Weight,
+            completed = Completed
         };
     }
 }

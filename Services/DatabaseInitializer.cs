@@ -1,12 +1,17 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using WorkoutTracker.Server.Models;
 
 namespace WorkoutTracker.Server.Services;
 
-public static class AdminSeeder
+public static class DatabaseInitializer
 {
-    public static async Task SeedAdminAsync(this WebApplication app)
+    public static async Task InitializeDatabaseAsync(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
+
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await context.Database.MigrateAsync();
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         if (!await roleManager.RoleExistsAsync("Admin"))

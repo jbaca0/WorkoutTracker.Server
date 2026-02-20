@@ -7,6 +7,7 @@ public class Set
     public Guid? id { get; set; }
     public int reps { get; set; }
     public decimal weight { get; set; }
+    public bool completed { get; set; }
 
     public static Set BuildFromModel(Models.Set set)
     {
@@ -14,7 +15,8 @@ public class Set
         {
             id = set.Id,
             reps = set.Reps,
-            weight = set.Weight
+            weight = set.Weight,
+            completed = set.Completed
         };
     }
 }

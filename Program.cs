@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using WorkoutTracker.Server.Authorization;
@@ -16,7 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<ApplicationDbContext>();
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddRepositories();
 
 builder.Services.AddAuthorization();
@@ -74,7 +76,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-await app.SeedAdminAsync();
+await app.InitializeDatabaseAsync();
 
 app.Services.GetRequiredService<ILoggerFactory>()
     .AddProvider(new DatabaseLoggerProvider(app.Services, app.Configuration));

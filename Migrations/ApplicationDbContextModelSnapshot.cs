@@ -324,6 +324,9 @@ namespace WorkoutTracker.Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("Completed")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("ExerciseId")
                         .HasColumnType("TEXT");
 
