@@ -101,7 +101,8 @@ public class WorkoutRepository
                     Id = Guid.NewGuid(),
                     ExerciseId = modelExercise.Id,
                     Reps = set.Reps,
-                    Weight = set.Weight
+                    Weight = set.Weight,
+                    Completed = set.Completed
                 });
             }
 
