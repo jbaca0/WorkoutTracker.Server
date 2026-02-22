@@ -146,6 +146,18 @@ public static class WorkoutHandler
         return Results.Ok(new GetWorkoutHistoryResponse { workouts = summaries });
     }
 
+    public static async Task<IResult> Cancel(
+        Guid workoutId,
+        WorkoutRepository workoutRepository)
+    {
+        bool success = await workoutRepository.DeleteAsync(workoutId);
+        if (!success)
+        {
+            return Results.BadRequest();
+        }
+        return Results.Ok();
+    }
+
     public static async Task<IResult> GetWorkoutDetail(
         Guid workoutId,
         ClaimsPrincipal user,
