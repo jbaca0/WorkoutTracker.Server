@@ -140,4 +140,25 @@ public class WorkoutRepository
         return DomainObjects.Workout.FromModel(modelWorkout);
     }
 
+    public async Task<bool> DeleteAsync(Guid workoutId)
+    {
+        try
+        {
+            var workout = await dbContext.Workouts
+                .Include(w => w.Exercises)
+                    .ThenInclude(e => e.Sets)
+                .FirstOrDefaultAsync(w => w.Id == workoutId);
+
+            if (workout == null) return false;
+
+            dbContext.Workouts.Remove(workout);
+            await dbContext.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
 }

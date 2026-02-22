@@ -29,6 +29,8 @@ public static class WorkoutRoutes
 
         workoutOwnerGroup.MapGet("/getWorkoutDetail/{workoutId}", WorkoutHandler.GetWorkoutDetail);
 
+        workoutOwnerGroup.MapDelete("/cancelWorkout/{workoutId}", WorkoutHandler.Cancel);
+
         app.MapGet("/getWorkoutHistory", WorkoutHandler.GetWorkoutHistory)
             .RequireAuthorization();
 
