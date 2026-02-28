@@ -9,4 +9,5 @@ public class ExerciseInfo
     public string Name { get; set; } = string.Empty;
     public MuscleGroup? PrimaryMuscleGroup { get; set; } = MuscleGroup.Other;
     public string? SecondaryMuscleGroupsJson { get; set; }
+    public Guid? CreatedByUserId { get; set; }
 }

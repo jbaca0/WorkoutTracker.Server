@@ -14,16 +14,20 @@ public class ExerciseRepository
         this.dbContext = dbContext;
     }
 
-    public async Task<List<DomainObjects.Exercise>> GetLatestExercisesForUserAsync(Guid userId, List<Guid> exerciseInfoIds)
+    public async Task<List<DomainObjects.Exercise>> GetLatestExercisesForUserAsync(Guid userId, List<Guid> exerciseInfoIds, Guid? excludeWorkoutId = null)
     {
-        var latestExercises = await dbContext.Exercises
-            .Include(e => e.Workout)
-            .Include(e => e.ExerciseInfo)
-            .Include(e => e.Sets)
+        var latestExerciseIds = await dbContext.Exercises
             .Where(e => exerciseInfoIds.Contains(e.ExerciseInfoId))
             .Where(e => e.Workout.UserId == userId)
+            .Where(e => excludeWorkoutId == null || e.WorkoutId != excludeWorkoutId)
             .GroupBy(e => e.ExerciseInfoId)
-            .Select(g => g.OrderByDescending(e => e.Workout.AddDateTime).First())
+            .Select(g => g.OrderByDescending(e => e.Workout.AddDateTime).First().Id)
+            .ToListAsync();
+
+        var latestExercises = await dbContext.Exercises
+            .Include(e => e.ExerciseInfo)
+            .Include(e => e.Sets)
+            .Where(e => latestExerciseIds.Contains(e.Id))
             .ToListAsync();
 
         return latestExercises.Select(DomainObjects.Exercise.FromModel).ToList();
