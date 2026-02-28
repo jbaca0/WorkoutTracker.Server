@@ -8,7 +8,7 @@ public static class ExerciseInfoRoutes
     public static void MapExerciseInfoRoutes(this WebApplication app)
     {
         app.MapPost("/addExerciseInfo", ExerciseInfoHandler.AddExerciseInfo)
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization();
         app.MapGet("/getExerciseInfos", ExerciseInfoHandler.GetExerciseInfos)
             .RequireAuthorization();
     }

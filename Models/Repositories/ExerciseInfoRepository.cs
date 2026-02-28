@@ -30,6 +30,15 @@ public class ExerciseInfoRepository
         return modelExerciseInfos.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
     }
 
+    public async Task<List<DomainObjects.ExerciseInfo>> GetForUserAsync(Guid userId)
+    {
+        var modelExerciseInfos = await dbContext.ExerciseInfos
+            .Where(e => e.CreatedByUserId == null || e.CreatedByUserId == userId)
+            .ToListAsync();
+
+        return modelExerciseInfos.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
+    }
+
     public async Task<DomainObjects.ExerciseInfo?> GetByIdAsync(Guid id)
     {
         var model = await dbContext.ExerciseInfos.FindAsync(id);
