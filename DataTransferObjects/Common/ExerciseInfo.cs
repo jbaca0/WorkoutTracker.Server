@@ -10,4 +10,5 @@ public class ExerciseInfo
     public Guid id { get; set; } = Guid.Empty;
     public MuscleGroup primaryMuscleGroup { get; set; } = MuscleGroup.None;
     public List<string> secondaryMuscleGroups { get; set; } = new();
+    public Guid? createdByUserId { get; set; }
 }

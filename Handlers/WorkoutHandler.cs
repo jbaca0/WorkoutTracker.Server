@@ -86,7 +86,7 @@ public static class WorkoutHandler
             return Results.BadRequest();
         }
 
-        var domainUserExerciseInfos = await userExerciseInfoService.GetByIdsAsync(user.GetUserId(), request.exerciseInfoIds);
+        var domainUserExerciseInfos = await userExerciseInfoService.GetByIdsAsync(user.GetUserId(), request.exerciseInfoIds, request.workoutId);
 
         // Convert Domain objects to DTOs
         var dtoUserExerciseInfos = domainUserExerciseInfos.Select(domain => new DataTransferObjects.Common.UserExerciseInfo

@@ -13,11 +13,11 @@ public class UserExerciseInfoService
         this.exerciseRepository = exerciseRepository;
     }
 
-    public async Task<List<UserExerciseInfo>> GetByIdsAsync(Guid? userId, List<Guid> exerciseInfoIds)
+    public async Task<List<UserExerciseInfo>> GetByIdsAsync(Guid? userId, List<Guid> exerciseInfoIds, Guid? excludeWorkoutId = null)
     {
         if (userId == null) return new List<UserExerciseInfo>();
 
-        var latestExercises = await exerciseRepository.GetLatestExercisesForUserAsync(userId.Value, exerciseInfoIds);
+        var latestExercises = await exerciseRepository.GetLatestExercisesForUserAsync(userId.Value, exerciseInfoIds, excludeWorkoutId);
 
         return latestExercises
             .Select(e => new UserExerciseInfo()
