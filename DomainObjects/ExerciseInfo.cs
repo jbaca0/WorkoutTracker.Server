@@ -11,6 +11,7 @@ public class ExerciseInfo
     public string Name { get; set; } = string.Empty;
     public MuscleGroup? PrimaryMuscleGroup { get; set; } = MuscleGroup.Other;
     public List<MuscleGroup>? SecondaryMuscleGroups { get; set; } = new();
+    public Guid? CreatedByUserId { get; set; }
 
     public static ExerciseInfo FromModel(Models.ExerciseInfo model)
     {
@@ -29,7 +30,8 @@ public class ExerciseInfo
             Id = model.Id,
             Name = model.Name,
             PrimaryMuscleGroup = model.PrimaryMuscleGroup,
-            SecondaryMuscleGroups = secondaryMuscleGroups
+            SecondaryMuscleGroups = secondaryMuscleGroups,
+            CreatedByUserId = model.CreatedByUserId
         };
     }
 
@@ -42,7 +44,8 @@ public class ExerciseInfo
             Id = Id,
             Name = Name,
             PrimaryMuscleGroup = PrimaryMuscleGroup,
-            SecondaryMuscleGroupsJson = secondaryJson
+            SecondaryMuscleGroupsJson = secondaryJson,
+            CreatedByUserId = CreatedByUserId
         };
     }
 
@@ -53,7 +56,8 @@ public class ExerciseInfo
             Id = data.id,
             Name = data.name,
             PrimaryMuscleGroup = data.primaryMuscleGroup,
-            SecondaryMuscleGroups = data.secondaryMuscleGroups?.Select(m => Enum.TryParse<MuscleGroup>(m, out var group) ? group : MuscleGroup.Other).ToList() ?? new List<MuscleGroup>()
+            SecondaryMuscleGroups = data.secondaryMuscleGroups?.Select(m => Enum.TryParse<MuscleGroup>(m, out var group) ? group : MuscleGroup.Other).ToList() ?? new List<MuscleGroup>(),
+            CreatedByUserId = data.createdByUserId
         };
     }
 
@@ -64,7 +68,8 @@ public class ExerciseInfo
             id = Id,
             name = Name,
             primaryMuscleGroup = PrimaryMuscleGroup ?? MuscleGroup.None,
-            secondaryMuscleGroups = SecondaryMuscleGroups?.Select(m => m.ToString()).ToList() ?? new List<string>()
+            secondaryMuscleGroups = SecondaryMuscleGroups?.Select(m => m.ToString()).ToList() ?? new List<string>(),
+            createdByUserId = CreatedByUserId
         };
     }
 }
