@@ -14,6 +14,14 @@ public class ExerciseRepository
         this.dbContext = dbContext;
     }
 
+    public async Task<List<DomainObjects.ExerciseInfo>> GetExerciseInfosByIdsAsync(List<Guid> exerciseInfoIds)
+    {
+        var models = await dbContext.ExerciseInfos
+            .Where(ei => exerciseInfoIds.Contains(ei.Id))
+            .ToListAsync();
+        return models.Select(DomainObjects.ExerciseInfo.FromModel).ToList();
+    }
+
     public async Task<List<DomainObjects.Exercise>> GetLatestExercisesForUserAsync(Guid userId, List<Guid> exerciseInfoIds, Guid? excludeWorkoutId = null)
     {
         var latestExerciseIds = await dbContext.Exercises
