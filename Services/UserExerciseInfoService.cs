@@ -17,13 +17,14 @@ public class UserExerciseInfoService
     {
         if (userId == null) return new List<UserExerciseInfo>();
 
+        var exerciseInfos = await exerciseRepository.GetExerciseInfosByIdsAsync(exerciseInfoIds);
         var latestExercises = await exerciseRepository.GetLatestExercisesForUserAsync(userId.Value, exerciseInfoIds, excludeWorkoutId);
+        var latestByInfoId = latestExercises.ToDictionary(e => e.ExerciseInfoId);
 
-        return latestExercises
-            .Select(e => new UserExerciseInfo()
-            {
-                ExerciseInfo = e.ExerciseInfo,
-                LatestExercise = e
-            }).ToList();
+        return exerciseInfos.Select(ei => new UserExerciseInfo
+        {
+            ExerciseInfo = ei,
+            LatestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null
+        }).ToList();
     }
 }

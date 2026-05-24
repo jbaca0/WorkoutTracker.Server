@@ -26,6 +26,7 @@ builder.Services.AddResourceAuthorization();
 
 builder.Services.AddScoped<UserExerciseInfoService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
