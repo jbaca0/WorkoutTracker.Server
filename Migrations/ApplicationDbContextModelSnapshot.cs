@@ -365,6 +365,106 @@ namespace WorkoutTracker.Server.Migrations
                     b.ToTable("Workouts");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorkoutPlans");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutPlanDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkoutPlanId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("WorkoutTemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkoutPlanId");
+
+                    b.HasIndex("WorkoutTemplateId");
+
+                    b.ToTable("WorkoutPlanDays");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorkoutTemplates");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplateExercise", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ExerciseInfoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("WorkoutTemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseInfoId");
+
+                    b.HasIndex("WorkoutTemplateId");
+
+                    b.ToTable("WorkoutTemplateExercises");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -457,12 +557,58 @@ namespace WorkoutTracker.Server.Migrations
                     b.Navigation("Exercise");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutPlanDay", b =>
+                {
+                    b.HasOne("WorkoutTracker.Server.Models.WorkoutPlan", "WorkoutPlan")
+                        .WithMany("Days")
+                        .HasForeignKey("WorkoutPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WorkoutTracker.Server.Models.WorkoutTemplate", "WorkoutTemplate")
+                        .WithMany()
+                        .HasForeignKey("WorkoutTemplateId");
+
+                    b.Navigation("WorkoutPlan");
+
+                    b.Navigation("WorkoutTemplate");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplateExercise", b =>
+                {
+                    b.HasOne("WorkoutTracker.Server.Models.ExerciseInfo", "ExerciseInfo")
+                        .WithMany()
+                        .HasForeignKey("ExerciseInfoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WorkoutTracker.Server.Models.WorkoutTemplate", "WorkoutTemplate")
+                        .WithMany("Exercises")
+                        .HasForeignKey("WorkoutTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExerciseInfo");
+
+                    b.Navigation("WorkoutTemplate");
+                });
+
             modelBuilder.Entity("WorkoutTracker.Server.Models.Exercise", b =>
                 {
                     b.Navigation("Sets");
                 });
 
             modelBuilder.Entity("WorkoutTracker.Server.Models.Workout", b =>
+                {
+                    b.Navigation("Exercises");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutPlan", b =>
+                {
+                    b.Navigation("Days");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplate", b =>
                 {
                     b.Navigation("Exercises");
                 });

@@ -14,6 +14,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<Set> Sets { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<LogEntry> LogEntries { get; set; }
+    public DbSet<WorkoutTemplate> WorkoutTemplates { get; set; }
+    public DbSet<WorkoutTemplateExercise> WorkoutTemplateExercises { get; set; }
+    public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
+    public DbSet<WorkoutPlanDay> WorkoutPlanDays { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
         base(options)
@@ -41,5 +45,25 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
         builder.Entity<ExerciseInfo>()
             .Property(e => e.SecondaryMuscleGroupsJson)
             .HasDefaultValue("[]");
+
+        builder.Entity<WorkoutTemplate>()
+            .Property(t => t.CreatedDateTime)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Entity<WorkoutTemplate>()
+            .HasMany(t => t.Exercises)
+            .WithOne(e => e.WorkoutTemplate)
+            .HasForeignKey(e => e.WorkoutTemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<WorkoutPlan>()
+            .Property(p => p.CreatedDateTime)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Entity<WorkoutPlan>()
+            .HasMany(p => p.Days)
+            .WithOne(d => d.WorkoutPlan)
+            .HasForeignKey(d => d.WorkoutPlanId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
