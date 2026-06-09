@@ -333,6 +333,9 @@ namespace WorkoutTracker.Server.Migrations
                     b.Property<Guid>("ExerciseId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Reps")
                         .HasColumnType("INTEGER");
 
