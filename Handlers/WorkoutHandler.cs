@@ -102,7 +102,8 @@ public static class WorkoutHandler
                 sets = domain.LatestExercise.Sets.Select(s => new DataTransferObjects.Common.Set
                 {
                     reps = s.Reps,
-                    weight = s.Weight
+                    weight = s.Weight,
+                    order = s.Order
                 }).ToList()
             } : null
         }).ToList();
@@ -197,7 +198,8 @@ public static class WorkoutHandler
                         id = s.Id,
                         reps = s.Reps,
                         weight = s.Weight,
-                        completed = s.Completed
+                        completed = s.Completed,
+                        order = s.Order
                     }).ToList()
                 };
 
@@ -209,7 +211,8 @@ public static class WorkoutHandler
                         sets = prev.Sets.Select(s => new DataTransferObjects.Common.Set
                         {
                             reps = s.Reps,
-                            weight = s.Weight
+                            weight = s.Weight,
+                            order = s.Order
                         }).ToList()
                     };
                 }
