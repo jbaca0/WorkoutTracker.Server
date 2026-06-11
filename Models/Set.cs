@@ -12,4 +12,5 @@ public class Set
     public int Reps { get; set; }
     public decimal Weight { get; set; }
     public bool Completed { get; set; }
+    public int Order { get; set; }
 }
