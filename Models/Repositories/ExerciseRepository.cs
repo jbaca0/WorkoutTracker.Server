@@ -40,4 +40,21 @@ public class ExerciseRepository
 
         return latestExercises.Select(DomainObjects.Exercise.FromModel).ToList();
     }
+
+    public async Task<(decimal weight, int reps)?> GetBestSetByEpleyAsync(Guid userId, Guid exerciseInfoId)
+    {
+        var sets = await dbContext.Sets
+            .Where(s => s.Exercise.ExerciseInfoId == exerciseInfoId)
+            .Where(s => s.Exercise.Workout.UserId == userId)
+            .Select(s => new { s.Weight, s.Reps })
+            .ToListAsync();
+
+        if (sets.Count == 0) return null;
+
+        var best = sets
+            .OrderByDescending(s => s.Weight * (1 + s.Reps / 30m))
+            .First();
+
+        return (best.Weight, best.Reps);
+    }
 }

@@ -6,4 +6,5 @@ public class WorkoutTemplateExercise
     public Guid exerciseInfoId { get; set; }
     public ExerciseInfo? exerciseInfo { get; set; }
     public int order { get; set; }
+    public int targetReps { get; set; }
 }

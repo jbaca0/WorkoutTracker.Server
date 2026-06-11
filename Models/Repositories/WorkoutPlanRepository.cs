@@ -29,7 +29,20 @@ public class WorkoutPlanRepository
         return await dbContext.WorkoutPlans.FindAsync(id);
     }
 
-    public async Task<Guid> AddAsync(Guid userId, string name, List<WorkoutPlanDayRequest> days)
+    public async Task<DomainObjects.WorkoutPlan?> GetByIdWithDetailsAsync(Guid id)
+    {
+        var plan = await dbContext.WorkoutPlans
+            .Where(p => p.Id == id)
+            .Include(p => p.Days)
+                .ThenInclude(d => d.WorkoutTemplate)
+                    .ThenInclude(t => t!.Exercises)
+                        .ThenInclude(e => e.ExerciseInfo)
+            .FirstOrDefaultAsync();
+
+        return plan != null ? DomainObjects.WorkoutPlan.FromModel(plan) : null;
+    }
+
+    public async Task<Guid> AddAsync(Guid userId, string name, DateTime startDate, DateTime? endDate, List<WorkoutPlanDayRequest> days)
     {
         var plan = new WorkoutPlan
         {
@@ -37,6 +50,8 @@ public class WorkoutPlanRepository
             UserId = userId,
             Name = name,
             IsActive = false,
+            StartDate = startDate,
+            EndDate = endDate,
             Days = days.Select(d => new WorkoutPlanDay
             {
                 Id = Guid.NewGuid(),
@@ -51,7 +66,7 @@ public class WorkoutPlanRepository
         return plan.Id;
     }
 
-    public async Task<bool> UpdateAsync(Guid planId, string name, List<WorkoutPlanDayRequest> days)
+    public async Task<bool> UpdateAsync(Guid planId, string name, DateTime startDate, DateTime? endDate, List<WorkoutPlanDayRequest> days)
     {
         var plan = await dbContext.WorkoutPlans
             .Where(p => p.Id == planId)
@@ -61,6 +76,8 @@ public class WorkoutPlanRepository
         if (plan == null) return false;
 
         plan.Name = name;
+        plan.StartDate = startDate;
+        plan.EndDate = endDate;
         dbContext.WorkoutPlanDays.RemoveRange(plan.Days);
         plan.Days = days.Select(d => new WorkoutPlanDay
         {

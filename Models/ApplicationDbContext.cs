@@ -18,6 +18,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<WorkoutTemplateExercise> WorkoutTemplateExercises { get; set; }
     public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
     public DbSet<WorkoutPlanDay> WorkoutPlanDays { get; set; }
+    public DbSet<ExerciseGoal> ExerciseGoals { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
         base(options)
@@ -64,6 +65,26 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             .HasMany(p => p.Days)
             .WithOne(d => d.WorkoutPlan)
             .HasForeignKey(d => d.WorkoutPlanId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ExerciseGoal>()
+            .Property(g => g.CreatedAt)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Entity<ExerciseGoal>()
+            .HasIndex(g => new { g.UserId, g.ExerciseInfoId })
+            .IsUnique();
+
+        builder.Entity<ExerciseGoal>()
+            .HasOne(g => g.WorkoutPlan)
+            .WithMany()
+            .HasForeignKey(g => g.WorkoutPlanId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ExerciseGoal>()
+            .HasOne(g => g.ExerciseInfo)
+            .WithMany()
+            .HasForeignKey(g => g.ExerciseInfoId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

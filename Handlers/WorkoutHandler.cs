@@ -105,7 +105,10 @@ public static class WorkoutHandler
                     weight = s.Weight,
                     order = s.Order
                 }).ToList()
-            } : null
+            } : null,
+            bestSetWeight = domain.BestSetWeight,
+            bestSetReps = domain.BestSetReps,
+            goalRecommendation = domain.GoalRecommendation
         }).ToList();
 
         var response = new AddExercisesResponse()
@@ -163,7 +166,9 @@ public static class WorkoutHandler
         Guid workoutId,
         ClaimsPrincipal user,
         WorkoutRepository workoutRepository,
-        ExerciseRepository exerciseRepository)
+        ExerciseRepository exerciseRepository,
+        ExerciseGoalRepository exerciseGoalRepository,
+        WorkoutPlanRepository workoutPlanRepository)
     {
         var workout = await workoutRepository.GetWorkoutWithDetailsAsync(workoutId);
 
@@ -178,6 +183,27 @@ public static class WorkoutHandler
             ? await exerciseRepository.GetLatestExercisesForUserAsync(userId, exerciseInfoIds)
             : new List<DomainObjects.Exercise>();
         var previousByInfoId = previousExercises.ToDictionary(e => e.ExerciseInfoId);
+
+        var goals = exerciseInfoIds.Count > 0
+            ? await exerciseGoalRepository.GetByExerciseInfoIdsAsync(userId, exerciseInfoIds)
+            : new List<DomainObjects.ExerciseGoal>();
+        var goalsByInfoId = goals.ToDictionary(g => g.ExerciseInfoId);
+
+        var planCache = new Dictionary<Guid, DomainObjects.WorkoutPlan?>();
+        var recommendationsByInfoId = new Dictionary<Guid, DataTransferObjects.Common.GoalRecommendation>();
+        foreach (var goal in goals)
+        {
+            if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
+            {
+                plan = await workoutPlanRepository.GetByIdWithDetailsAsync(goal.WorkoutPlanId);
+                planCache[goal.WorkoutPlanId] = plan;
+            }
+
+            if (plan != null)
+            {
+                recommendationsByInfoId[goal.ExerciseInfoId] = goal.CalculateRecommendation(DateTime.UtcNow, plan);
+            }
+        }
 
         var workoutDto = new DataTransferObjects.Common.Workout
         {
@@ -215,6 +241,11 @@ public static class WorkoutHandler
                             order = s.Order
                         }).ToList()
                     };
+                }
+
+                if (recommendationsByInfoId.TryGetValue(e.ExerciseInfoId, out var recommendation))
+                {
+                    exerciseDto.goalRecommendation = recommendation;
                 }
 
                 return exerciseDto;

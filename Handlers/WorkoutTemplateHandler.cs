@@ -28,7 +28,7 @@ public static class WorkoutTemplateHandler
         WorkoutTemplateRepository templateRepository)
     {
         var userId = user.GetUserId();
-        var templateId = await templateRepository.AddAsync(userId, request.name, request.exerciseInfoIds);
+        var templateId = await templateRepository.AddAsync(userId, request.name, request.exercises);
         return Results.Ok(templateId);
     }
 
@@ -43,7 +43,7 @@ public static class WorkoutTemplateHandler
         if (template == null) return Results.NotFound();
         if (template.UserId != userId) return Results.Forbid();
 
-        var success = await templateRepository.UpdateAsync(request.templateId, request.name, request.exerciseInfoIds);
+        var success = await templateRepository.UpdateAsync(request.templateId, request.name, request.exercises);
         return success ? Results.Ok() : Results.BadRequest();
     }
 
@@ -107,7 +107,10 @@ public static class WorkoutTemplateHandler
                     reps = s.Reps,
                     weight = s.Weight
                 }).ToList()
-            } : null
+            } : null,
+            bestSetWeight = domain.BestSetWeight,
+            bestSetReps = domain.BestSetReps,
+            goalRecommendation = domain.GoalRecommendation
         }).ToList();
 
         return Results.Ok(new StartWorkoutFromTemplateResponse

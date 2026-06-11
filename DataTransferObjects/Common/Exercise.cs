@@ -9,6 +9,7 @@ public class Exercise
     public ExerciseInfo? exerciseInfo { get; set; }
     public List<Set> sets { get; set; } = new List<Set>();
     public Exercise? previousExercise { get; set; }
+    public GoalRecommendation? goalRecommendation { get; set; }
 
     public static Exercise BuildFromModel(Models.Exercise exercise)
     {

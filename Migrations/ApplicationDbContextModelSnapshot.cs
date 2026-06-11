@@ -230,6 +230,53 @@ namespace WorkoutTracker.Server.Migrations
                     b.ToTable("Exercises");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.ExerciseGoal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("ExerciseInfoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("GoalDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StartReps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("StartWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TargetReps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TargetWeight")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkoutPlanId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExerciseInfoId");
+
+                    b.HasIndex("WorkoutPlanId");
+
+                    b.HasIndex("UserId", "ExerciseInfoId")
+                        .IsUnique();
+
+                    b.ToTable("ExerciseGoals");
+                });
+
             modelBuilder.Entity("WorkoutTracker.Server.Models.ExerciseInfo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -379,12 +426,20 @@ namespace WorkoutTracker.Server.Migrations
                         .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
@@ -455,6 +510,11 @@ namespace WorkoutTracker.Server.Migrations
 
                     b.Property<int>("Order")
                         .HasColumnType("INTEGER");
+
+                    b.Property<int>("TargetReps")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
 
                     b.Property<Guid>("WorkoutTemplateId")
                         .HasColumnType("TEXT");
@@ -536,6 +596,25 @@ namespace WorkoutTracker.Server.Migrations
                     b.Navigation("ExerciseInfo");
 
                     b.Navigation("Workout");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.ExerciseGoal", b =>
+                {
+                    b.HasOne("WorkoutTracker.Server.Models.ExerciseInfo", "ExerciseInfo")
+                        .WithMany()
+                        .HasForeignKey("ExerciseInfoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WorkoutTracker.Server.Models.WorkoutPlan", "WorkoutPlan")
+                        .WithMany()
+                        .HasForeignKey("WorkoutPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExerciseInfo");
+
+                    b.Navigation("WorkoutPlan");
                 });
 
             modelBuilder.Entity("WorkoutTracker.Server.Models.RefreshToken", b =>
