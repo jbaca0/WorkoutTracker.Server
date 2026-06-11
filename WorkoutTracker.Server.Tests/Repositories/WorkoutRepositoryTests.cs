@@ -173,4 +173,117 @@ public class WorkoutRepositoryTests
         result.Should().HaveCount(2);
         result[0].AddDateTime.Should().BeAfter(result[1].AddDateTime);
     }
+
+    // --- GetExercisesAsync ---
+
+    [Fact]
+    public async Task GetExercisesAsync_ReturnsOnlyExercisesForTheGivenWorkout()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var workoutId = Guid.NewGuid();
+        var otherWorkoutId = Guid.NewGuid();
+        var benchInfo = new Models.ExerciseInfo { Id = Guid.NewGuid(), Name = "Bench Press", SecondaryMuscleGroupsJson = "[]" };
+        var squatInfo = new Models.ExerciseInfo { Id = Guid.NewGuid(), Name = "Squat", SecondaryMuscleGroupsJson = "[]" };
+
+        dbContext.Workouts.AddRange(
+            new Models.Workout { Id = workoutId, UserId = Guid.NewGuid() },
+            new Models.Workout { Id = otherWorkoutId, UserId = Guid.NewGuid() });
+        dbContext.ExerciseInfos.AddRange(benchInfo, squatInfo);
+        dbContext.Exercises.AddRange(
+            new Models.Exercise { Id = Guid.NewGuid(), WorkoutId = workoutId, ExerciseInfoId = benchInfo.Id },
+            new Models.Exercise { Id = Guid.NewGuid(), WorkoutId = otherWorkoutId, ExerciseInfoId = squatInfo.Id });
+        await dbContext.SaveChangesAsync();
+
+        var repo = new WorkoutRepository(dbContext);
+        var result = await repo.GetExercisesAsync(workoutId);
+
+        result.Should().ContainSingle();
+        result[0].ExerciseInfo.Name.Should().Be("Bench Press");
+    }
+
+    [Fact]
+    public async Task GetExercisesAsync_WithUnknownWorkout_ReturnsEmptyList()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var repo = new WorkoutRepository(dbContext);
+
+        var result = await repo.GetExercisesAsync(Guid.NewGuid());
+
+        result.Should().BeEmpty();
+    }
+
+    // --- GetWorkoutWithDetailsAsync ---
+
+    [Fact]
+    public async Task GetWorkoutWithDetailsAsync_ReturnsWorkoutWithExercisesAndOrderedSets()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var workoutId = Guid.NewGuid();
+        var exerciseInfo = new Models.ExerciseInfo { Id = Guid.NewGuid(), Name = "Deadlift", SecondaryMuscleGroupsJson = "[]" };
+        var exercise = new Models.Exercise { Id = Guid.NewGuid(), WorkoutId = workoutId, ExerciseInfoId = exerciseInfo.Id };
+        exercise.Sets.Add(new Models.Set { Id = Guid.NewGuid(), ExerciseId = exercise.Id, Reps = 3, Weight = 225m, Order = 2 });
+        exercise.Sets.Add(new Models.Set { Id = Guid.NewGuid(), ExerciseId = exercise.Id, Reps = 5, Weight = 185m, Order = 1 });
+
+        dbContext.Workouts.Add(new Models.Workout { Id = workoutId, UserId = Guid.NewGuid(), AddDateTime = DateTime.UtcNow });
+        dbContext.ExerciseInfos.Add(exerciseInfo);
+        dbContext.Exercises.Add(exercise);
+        await dbContext.SaveChangesAsync();
+
+        var repo = new WorkoutRepository(dbContext);
+        var result = await repo.GetWorkoutWithDetailsAsync(workoutId);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(workoutId);
+        var domainExercise = result.Exercises.Should().ContainSingle().Subject;
+        domainExercise.ExerciseInfo.Name.Should().Be("Deadlift");
+        domainExercise.Sets.Should().HaveCount(2);
+        domainExercise.Sets.Select(s => s.Order).Should().ContainInOrder(1, 2);
+    }
+
+    [Fact]
+    public async Task GetWorkoutWithDetailsAsync_WithUnknownWorkout_ReturnsNull()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var repo = new WorkoutRepository(dbContext);
+
+        var result = await repo.GetWorkoutWithDetailsAsync(Guid.NewGuid());
+
+        result.Should().BeNull();
+    }
+
+    // --- DeleteAsync ---
+
+    [Fact]
+    public async Task DeleteAsync_WithExistingWorkout_RemovesWorkoutWithExercisesAndSets()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var workoutId = Guid.NewGuid();
+        var exerciseInfo = new Models.ExerciseInfo { Id = Guid.NewGuid(), Name = "Row", SecondaryMuscleGroupsJson = "[]" };
+        var exercise = new Models.Exercise { Id = Guid.NewGuid(), WorkoutId = workoutId, ExerciseInfoId = exerciseInfo.Id };
+        exercise.Sets.Add(new Models.Set { Id = Guid.NewGuid(), ExerciseId = exercise.Id, Reps = 10, Weight = 95m, Order = 1 });
+
+        dbContext.Workouts.Add(new Models.Workout { Id = workoutId, UserId = Guid.NewGuid() });
+        dbContext.ExerciseInfos.Add(exerciseInfo);
+        dbContext.Exercises.Add(exercise);
+        await dbContext.SaveChangesAsync();
+
+        var repo = new WorkoutRepository(dbContext);
+        var result = await repo.DeleteAsync(workoutId);
+
+        result.Should().BeTrue();
+        dbContext.Workouts.Should().BeEmpty();
+        dbContext.Exercises.Should().BeEmpty();
+        dbContext.Sets.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithUnknownWorkout_ReturnsFalse()
+    {
+        var dbContext = DbContextFactory.CreateInMemory();
+        var repo = new WorkoutRepository(dbContext);
+
+        var result = await repo.DeleteAsync(Guid.NewGuid());
+
+        result.Should().BeFalse();
+    }
 }

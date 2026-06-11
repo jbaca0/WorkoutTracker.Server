@@ -88,7 +88,7 @@ public class UserExerciseInfoServiceTests
     }
 
     [Fact]
-    public async Task GetByIdsAsync_ExerciseBelongingToDifferentUser_IsNotReturned()
+    public async Task GetByIdsAsync_ExerciseBelongingToDifferentUser_DoesNotLeakOtherUsersData()
     {
         var dbContext = DbContextFactory.CreateInMemory();
 
@@ -127,6 +127,10 @@ public class UserExerciseInfoServiceTests
 
         var result = await service.GetByIdsAsync(userId, new List<Guid> { exerciseInfoId });
 
-        result.Should().BeEmpty();
+        // ExerciseInfo is global data, so one entry per requested id is returned,
+        // but the other user's exercise data must not leak to the requesting user.
+        result.Should().HaveCount(1);
+        result[0].ExerciseInfo.Id.Should().Be(exerciseInfoId);
+        result[0].LatestExercise.Should().BeNull();
     }
 }
