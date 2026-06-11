@@ -94,6 +94,7 @@ public class WorkoutRepository
                 ExerciseInfoId = exercise.ExerciseInfoId
             };
 
+            var setOrder = 1;
             foreach (var set in exercise.Sets)
             {
                 modelExercise.Sets.Add(new Set
@@ -102,7 +103,8 @@ public class WorkoutRepository
                     ExerciseId = modelExercise.Id,
                     Reps = set.Reps,
                     Weight = set.Weight,
-                    Completed = set.Completed
+                    Completed = set.Completed,
+                    Order = setOrder++
                 });
             }
 

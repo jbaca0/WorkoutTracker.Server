@@ -9,6 +9,7 @@ public class Set
     public int Reps { get; set; }
     public decimal Weight { get; set; }
     public bool Completed { get; set; }
+    public int Order { get; set; }
 
     public static Set FromModel(Models.Set model)
     {
@@ -18,7 +19,8 @@ public class Set
             ExerciseId = model.ExerciseId,
             Reps = model.Reps,
             Weight = model.Weight,
-            Completed = model.Completed
+            Completed = model.Completed,
+            Order = model.Order
         };
     }
 
@@ -30,7 +32,8 @@ public class Set
             ExerciseId = ExerciseId,
             Reps = Reps,
             Weight = Weight,
-            Completed = Completed
+            Completed = Completed,
+            Order = Order
         };
     }
 
@@ -51,7 +54,8 @@ public class Set
             id = Id,
             reps = Reps,
             weight = Weight,
-            completed = Completed
+            completed = Completed,
+            order = Order
         };
     }
 }
