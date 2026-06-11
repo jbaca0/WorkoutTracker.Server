@@ -18,7 +18,7 @@ public class Exercise
             WorkoutId = model.WorkoutId,
             ExerciseInfoId = model.ExerciseInfoId,
             ExerciseInfo = ExerciseInfo.FromModel(model.ExerciseInfo),
-            Sets = model.Sets?.Select(Set.FromModel).ToList() ?? new List<Set>()
+            Sets = model.Sets?.OrderBy(s => s.Order).Select(Set.FromModel).ToList() ?? new List<Set>()
         };
     }
 
