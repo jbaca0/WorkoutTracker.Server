@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WorkoutTracker.Server.DataTransferObjects.Requests.WorkoutTemplate;
 
 namespace WorkoutTracker.Server.Models.Repositories;
 
@@ -32,18 +33,19 @@ public class WorkoutTemplateRepository
             .FirstOrDefaultAsync();
     }
 
-    public async Task<Guid> AddAsync(Guid userId, string name, List<Guid> exerciseInfoIds)
+    public async Task<Guid> AddAsync(Guid userId, string name, List<WorkoutTemplateExerciseRequest> exercises)
     {
         var template = new WorkoutTemplate
         {
             Id = Guid.NewGuid(),
             Name = name,
             UserId = userId,
-            Exercises = exerciseInfoIds.Select((id, index) => new WorkoutTemplateExercise
+            Exercises = exercises.Select((e, index) => new WorkoutTemplateExercise
             {
                 Id = Guid.NewGuid(),
-                ExerciseInfoId = id,
-                Order = index
+                ExerciseInfoId = e.exerciseInfoId,
+                Order = index,
+                TargetReps = e.targetReps
             }).ToList()
         };
 
@@ -52,7 +54,7 @@ public class WorkoutTemplateRepository
         return template.Id;
     }
 
-    public async Task<bool> UpdateAsync(Guid templateId, string name, List<Guid> exerciseInfoIds)
+    public async Task<bool> UpdateAsync(Guid templateId, string name, List<WorkoutTemplateExerciseRequest> exercises)
     {
         var template = await dbContext.WorkoutTemplates
             .Where(t => t.Id == templateId)
@@ -63,12 +65,13 @@ public class WorkoutTemplateRepository
 
         template.Name = name;
         dbContext.WorkoutTemplateExercises.RemoveRange(template.Exercises);
-        template.Exercises = exerciseInfoIds.Select((id, index) => new WorkoutTemplateExercise
+        template.Exercises = exercises.Select((e, index) => new WorkoutTemplateExercise
         {
             Id = Guid.NewGuid(),
             WorkoutTemplateId = templateId,
-            ExerciseInfoId = id,
-            Order = index
+            ExerciseInfoId = e.exerciseInfoId,
+            Order = index,
+            TargetReps = e.targetReps
         }).ToList();
 
         await dbContext.SaveChangesAsync();

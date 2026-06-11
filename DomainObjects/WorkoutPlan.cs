@@ -7,6 +7,8 @@ public class WorkoutPlan
     public string Name { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime CreatedDateTime { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
     public List<WorkoutPlanDay> Days { get; set; } = new();
 
     public static WorkoutPlan FromModel(Models.WorkoutPlan model)
@@ -18,6 +20,8 @@ public class WorkoutPlan
             Name = model.Name,
             IsActive = model.IsActive,
             CreatedDateTime = model.CreatedDateTime,
+            StartDate = model.StartDate,
+            EndDate = model.EndDate,
             Days = model.Days?.Select(WorkoutPlanDay.FromModel).ToList() ?? new()
         };
     }
@@ -29,6 +33,8 @@ public class WorkoutPlan
             id = Id,
             name = Name,
             isActive = IsActive,
+            startDate = StartDate,
+            endDate = EndDate,
             days = Days.Select(d => d.ToData()).ToList()
         };
     }

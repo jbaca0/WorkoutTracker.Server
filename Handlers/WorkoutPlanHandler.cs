@@ -26,7 +26,7 @@ public static class WorkoutPlanHandler
         WorkoutPlanRepository planRepository)
     {
         var userId = user.GetUserId();
-        var planId = await planRepository.AddAsync(userId, request.name, request.days);
+        var planId = await planRepository.AddAsync(userId, request.name, request.startDate, request.endDate, request.days);
         return Results.Ok(planId);
     }
 
@@ -41,7 +41,7 @@ public static class WorkoutPlanHandler
         if (plan == null) return Results.NotFound();
         if (plan.UserId != userId) return Results.Forbid();
 
-        var success = await planRepository.UpdateAsync(request.planId, request.name, request.days);
+        var success = await planRepository.UpdateAsync(request.planId, request.name, request.startDate, request.endDate, request.days);
         return success ? Results.Ok() : Results.BadRequest();
     }
 
