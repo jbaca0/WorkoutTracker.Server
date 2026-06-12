@@ -8,8 +8,7 @@ public class Exercise
     public Guid exerciseInfoId { get; set; }
     public ExerciseInfo? exerciseInfo { get; set; }
     public List<Set> sets { get; set; } = new List<Set>();
-    public Exercise? previousExercise { get; set; }
-    public GoalRecommendation? goalRecommendation { get; set; }
+    public ExerciseTarget? target { get; set; }
 
     public static Exercise BuildFromModel(Models.Exercise exercise)
     {
