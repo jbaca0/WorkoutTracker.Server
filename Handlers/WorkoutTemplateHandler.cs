@@ -99,18 +99,9 @@ public static class WorkoutTemplateHandler
                 id = domain.ExerciseInfo.Id,
                 name = domain.ExerciseInfo.Name
             },
-            latestExercise = domain.LatestExercise != null ? new DataTransferObjects.Common.Exercise
-            {
-                exerciseInfoId = domain.LatestExercise.ExerciseInfoId,
-                sets = domain.LatestExercise.Sets.Select(s => new DataTransferObjects.Common.Set
-                {
-                    reps = s.Reps,
-                    weight = s.Weight
-                }).ToList()
-            } : null,
             bestSetWeight = domain.BestSetWeight,
             bestSetReps = domain.BestSetReps,
-            goalRecommendation = domain.GoalRecommendation
+            target = domain.Target
         }).ToList();
 
         return Results.Ok(new StartWorkoutFromTemplateResponse

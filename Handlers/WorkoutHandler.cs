@@ -11,6 +11,7 @@ using WorkoutTracker.Server.Models;
 using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Services;
 using WorkoutTracker.Server.DomainObjects;
+using WorkoutTracker.Server.Enums;
 
 
 namespace WorkoutTracker.Server.Handlers;
@@ -96,19 +97,9 @@ public static class WorkoutHandler
                 id = domain.ExerciseInfo.Id,
                 name = domain.ExerciseInfo.Name
             },
-            latestExercise = domain.LatestExercise != null ? new DataTransferObjects.Common.Exercise
-            {
-                exerciseInfoId = domain.LatestExercise.ExerciseInfoId,
-                sets = domain.LatestExercise.Sets.Select(s => new DataTransferObjects.Common.Set
-                {
-                    reps = s.Reps,
-                    weight = s.Weight,
-                    order = s.Order
-                }).ToList()
-            } : null,
             bestSetWeight = domain.BestSetWeight,
             bestSetReps = domain.BestSetReps,
-            goalRecommendation = domain.GoalRecommendation
+            target = domain.Target
         }).ToList();
 
         var response = new AddExercisesResponse()
@@ -229,23 +220,24 @@ public static class WorkoutHandler
                     }).ToList()
                 };
 
-                if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev))
-                {
-                    exerciseDto.previousExercise = new DataTransferObjects.Common.Exercise
-                    {
-                        exerciseInfoId = prev.ExerciseInfoId,
-                        sets = prev.Sets.Select(s => new DataTransferObjects.Common.Set
-                        {
-                            reps = s.Reps,
-                            weight = s.Weight,
-                            order = s.Order
-                        }).ToList()
-                    };
-                }
-
                 if (recommendationsByInfoId.TryGetValue(e.ExerciseInfoId, out var recommendation))
                 {
-                    exerciseDto.goalRecommendation = recommendation;
+                    var setCount = exerciseDto.sets.Count > 0 ? exerciseDto.sets.Count : 1;
+                    exerciseDto.target = new DataTransferObjects.Common.ExerciseTarget
+                    {
+                        type = TargetSource.Plan,
+                        sets = Enumerable.Range(0, setCount)
+                            .Select(_ => new DataTransferObjects.Common.TargetSet { weight = recommendation.weight, reps = recommendation.reps })
+                            .ToList()
+                    };
+                }
+                else if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev) && prev.Sets.Count > 0)
+                {
+                    exerciseDto.target = new DataTransferObjects.Common.ExerciseTarget
+                    {
+                        type = TargetSource.Previous,
+                        sets = prev.Sets.Select(s => new DataTransferObjects.Common.TargetSet { weight = s.Weight, reps = s.Reps }).ToList()
+                    };
                 }
 
                 return exerciseDto;

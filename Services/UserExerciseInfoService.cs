@@ -1,5 +1,7 @@
 using System;
+using WorkoutTracker.Server.DataTransferObjects.Common;
 using WorkoutTracker.Server.DomainObjects;
+using WorkoutTracker.Server.Enums;
 using WorkoutTracker.Server.Models.Repositories;
 
 namespace WorkoutTracker.Server.Services;
@@ -37,8 +39,9 @@ public class UserExerciseInfoService
         foreach (var ei in exerciseInfos)
         {
             var bestSet = await exerciseRepository.GetBestSetByEpleyAsync(userId.Value, ei.Id);
+            var latestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null;
 
-            DataTransferObjects.Common.GoalRecommendation? recommendation = null;
+            ExerciseTarget? target = null;
             if (goalsByInfoId.TryGetValue(ei.Id, out var goal))
             {
                 if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
@@ -49,17 +52,36 @@ public class UserExerciseInfoService
 
                 if (plan != null)
                 {
-                    recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
+                    var recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
+                    var setCount = latestExercise?.Sets.Count > 0 ? latestExercise.Sets.Count : 1;
+                    target = new ExerciseTarget
+                    {
+                        type = TargetSource.Plan,
+                        sets = Enumerable.Range(0, setCount)
+                            .Select(_ => new TargetSet { weight = recommendation.weight, reps = recommendation.reps })
+                            .ToList()
+                    };
                 }
+            }
+
+            if (target == null && latestExercise != null && latestExercise.Sets.Count > 0)
+            {
+                target = new ExerciseTarget
+                {
+                    type = TargetSource.Previous,
+                    sets = latestExercise.Sets
+                        .Select(s => new TargetSet { weight = s.Weight, reps = s.Reps })
+                        .ToList()
+                };
             }
 
             result.Add(new UserExerciseInfo
             {
                 ExerciseInfo = ei,
-                LatestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null,
+                LatestExercise = latestExercise,
                 BestSetWeight = bestSet?.weight,
                 BestSetReps = bestSet?.reps,
-                GoalRecommendation = recommendation
+                Target = target
             });
         }
 
