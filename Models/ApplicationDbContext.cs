@@ -62,10 +62,18 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         builder.Entity<WorkoutPlan>()
+            .Property(p => p.StartDate)
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.Entity<WorkoutPlan>()
             .HasMany(p => p.Days)
             .WithOne(d => d.WorkoutPlan)
             .HasForeignKey(d => d.WorkoutPlanId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<WorkoutTemplateExercise>()
+            .Property(e => e.TargetReps)
+            .HasDefaultValue(0);
 
         builder.Entity<ExerciseGoal>()
             .Property(g => g.CreatedAt)
