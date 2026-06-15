@@ -1,5 +1,4 @@
 using System;
-using WorkoutTracker.Server.DataTransferObjects.Common;
 using WorkoutTracker.Server.DomainObjects;
 using WorkoutTracker.Server.Enums;
 using WorkoutTracker.Server.Models.Repositories;
@@ -41,7 +40,7 @@ public class UserExerciseInfoService
             var bestSet = await exerciseRepository.GetBestSetByEpleyAsync(userId.Value, ei.Id);
             var latestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null;
 
-            ExerciseTarget? target = null;
+            DataTransferObjects.Common.ExerciseTarget? target = null;
             if (goalsByInfoId.TryGetValue(ei.Id, out var goal))
             {
                 if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
@@ -54,11 +53,11 @@ public class UserExerciseInfoService
                 {
                     var recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
                     var setCount = latestExercise?.Sets.Count > 0 ? latestExercise.Sets.Count : 1;
-                    target = new ExerciseTarget
+                    target = new DataTransferObjects.Common.ExerciseTarget
                     {
                         type = TargetSource.Plan,
                         sets = Enumerable.Range(0, setCount)
-                            .Select(_ => new TargetSet { weight = recommendation.weight, reps = recommendation.reps })
+                            .Select(_ => new DataTransferObjects.Common.TargetSet { weight = recommendation.weight, reps = recommendation.reps })
                             .ToList()
                     };
                 }
@@ -66,11 +65,11 @@ public class UserExerciseInfoService
 
             if (target == null && latestExercise != null && latestExercise.Sets.Count > 0)
             {
-                target = new ExerciseTarget
+                target = new DataTransferObjects.Common.ExerciseTarget
                 {
                     type = TargetSource.Previous,
                     sets = latestExercise.Sets
-                        .Select(s => new TargetSet { weight = s.Weight, reps = s.Reps })
+                        .Select(s => new DataTransferObjects.Common.TargetSet { weight = s.Weight, reps = s.Reps })
                         .ToList()
                 };
             }
