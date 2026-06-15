@@ -34,7 +34,7 @@ public class ExerciseGoal
         };
     }
 
-    public DataTransferObjects.Common.ExerciseGoal ToData(DataTransferObjects.Common.GoalRecommendation? recommendation = null)
+    public DataTransferObjects.Common.ExerciseGoal ToData(TargetSet? recommendation = null)
     {
         return new DataTransferObjects.Common.ExerciseGoal
         {
@@ -51,7 +51,9 @@ public class ExerciseGoal
             targetWeight = TargetWeight,
             targetReps = TargetReps,
             goalDate = GoalDate,
-            goalRecommendation = recommendation
+            goalRecommendation = recommendation != null
+                ? new DataTransferObjects.Common.GoalRecommendation { weight = recommendation.Weight, reps = recommendation.Reps }
+                : null
         };
     }
 
@@ -60,7 +62,7 @@ public class ExerciseGoal
     /// the estimated 1RM (Epley) between the goal's start and target across the plan's
     /// scheduled occurrences of this exercise.
     /// </summary>
-    public DataTransferObjects.Common.GoalRecommendation CalculateRecommendation(DateTime today, WorkoutPlan plan)
+    public TargetSet CalculateRecommendation(DateTime today, WorkoutPlan plan)
     {
         var start1RM = StartWeight * (1 + StartReps / 30m);
         var target1RM = TargetWeight * (1 + TargetReps / 30m);
@@ -120,10 +122,10 @@ public class ExerciseGoal
 
         var recommendedWeight = Math.Round(current1RM / (1 + plannedReps / 30m) / 5m) * 5m;
 
-        return new DataTransferObjects.Common.GoalRecommendation
+        return new TargetSet
         {
-            weight = recommendedWeight,
-            reps = plannedReps
+            Weight = recommendedWeight,
+            Reps = plannedReps
         };
     }
 

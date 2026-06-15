@@ -40,7 +40,7 @@ public class UserExerciseInfoService
             var bestSet = await exerciseRepository.GetBestSetByEpleyAsync(userId.Value, ei.Id);
             var latestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null;
 
-            DataTransferObjects.Common.ExerciseTarget? target = null;
+            ExerciseTarget? target = null;
             if (goalsByInfoId.TryGetValue(ei.Id, out var goal))
             {
                 if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
@@ -53,11 +53,11 @@ public class UserExerciseInfoService
                 {
                     var recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
                     var setCount = latestExercise?.Sets.Count > 0 ? latestExercise.Sets.Count : 1;
-                    target = new DataTransferObjects.Common.ExerciseTarget
+                    target = new ExerciseTarget
                     {
-                        type = TargetSource.Plan,
-                        sets = Enumerable.Range(0, setCount)
-                            .Select(_ => new DataTransferObjects.Common.TargetSet { weight = recommendation.weight, reps = recommendation.reps })
+                        Type = TargetSource.Plan,
+                        Sets = Enumerable.Range(0, setCount)
+                            .Select(_ => new TargetSet { Weight = recommendation.Weight, Reps = recommendation.Reps })
                             .ToList()
                     };
                 }
@@ -65,11 +65,11 @@ public class UserExerciseInfoService
 
             if (target == null && latestExercise != null && latestExercise.Sets.Count > 0)
             {
-                target = new DataTransferObjects.Common.ExerciseTarget
+                target = new ExerciseTarget
                 {
-                    type = TargetSource.Previous,
-                    sets = latestExercise.Sets
-                        .Select(s => new DataTransferObjects.Common.TargetSet { weight = s.Weight, reps = s.Reps })
+                    Type = TargetSource.Previous,
+                    Sets = latestExercise.Sets
+                        .Select(s => new TargetSet { Weight = s.Weight, Reps = s.Reps })
                         .ToList()
                 };
             }
