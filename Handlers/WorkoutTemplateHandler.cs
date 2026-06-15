@@ -101,7 +101,7 @@ public static class WorkoutTemplateHandler
             },
             bestSetWeight = domain.BestSetWeight,
             bestSetReps = domain.BestSetReps,
-            target = domain.Target
+            target = domain.Target?.ToData()
         }).ToList();
 
         return Results.Ok(new StartWorkoutFromTemplateResponse

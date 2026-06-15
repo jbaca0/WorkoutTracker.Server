@@ -99,7 +99,7 @@ public static class WorkoutHandler
             },
             bestSetWeight = domain.BestSetWeight,
             bestSetReps = domain.BestSetReps,
-            target = domain.Target
+            target = domain.Target?.ToData()
         }).ToList();
 
         var response = new AddExercisesResponse()
@@ -181,7 +181,7 @@ public static class WorkoutHandler
         var goalsByInfoId = goals.ToDictionary(g => g.ExerciseInfoId);
 
         var planCache = new Dictionary<Guid, DomainObjects.WorkoutPlan?>();
-        var recommendationsByInfoId = new Dictionary<Guid, DataTransferObjects.Common.GoalRecommendation>();
+        var recommendationsByInfoId = new Dictionary<Guid, DomainObjects.TargetSet>();
         foreach (var goal in goals)
         {
             if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
@@ -223,21 +223,21 @@ public static class WorkoutHandler
                 if (recommendationsByInfoId.TryGetValue(e.ExerciseInfoId, out var recommendation))
                 {
                     var setCount = exerciseDto.sets.Count > 0 ? exerciseDto.sets.Count : 1;
-                    exerciseDto.target = new DataTransferObjects.Common.ExerciseTarget
+                    exerciseDto.target = new DomainObjects.ExerciseTarget
                     {
-                        type = TargetSource.Plan,
-                        sets = Enumerable.Range(0, setCount)
-                            .Select(_ => new DataTransferObjects.Common.TargetSet { weight = recommendation.weight, reps = recommendation.reps })
+                        Type = TargetSource.Plan,
+                        Sets = Enumerable.Range(0, setCount)
+                            .Select(_ => new DomainObjects.TargetSet { Weight = recommendation.Weight, Reps = recommendation.Reps })
                             .ToList()
-                    };
+                    }.ToData();
                 }
                 else if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev) && prev.Sets.Count > 0)
                 {
-                    exerciseDto.target = new DataTransferObjects.Common.ExerciseTarget
+                    exerciseDto.target = new DomainObjects.ExerciseTarget
                     {
-                        type = TargetSource.Previous,
-                        sets = prev.Sets.Select(s => new DataTransferObjects.Common.TargetSet { weight = s.Weight, reps = s.Reps }).ToList()
-                    };
+                        Type = TargetSource.Previous,
+                        Sets = prev.Sets.Select(s => new DomainObjects.TargetSet { Weight = s.Weight, Reps = s.Reps }).ToList()
+                    }.ToData();
                 }
 
                 return exerciseDto;

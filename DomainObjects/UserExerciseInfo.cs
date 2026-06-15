@@ -12,7 +12,7 @@ public class UserExerciseInfo
     public int TotalSessions { get; set; }
     public decimal? BestSetWeight { get; set; }
     public int? BestSetReps { get; set; }
-    public DataTransferObjects.Common.ExerciseTarget? Target { get; set; }
+    public ExerciseTarget? Target { get; set; }
 
     public void CalculateBestStats()
     {
