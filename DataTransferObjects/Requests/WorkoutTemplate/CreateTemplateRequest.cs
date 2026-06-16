@@ -9,5 +9,10 @@ public class CreateTemplateRequest
 public class WorkoutTemplateExerciseRequest
 {
     public Guid exerciseInfoId { get; set; }
-    public int targetReps { get; set; }
+    public List<WorkoutTemplateExerciseSetRequest> sets { get; set; } = new();
+}
+
+public class WorkoutTemplateExerciseSetRequest
+{
+    public int reps { get; set; }
 }

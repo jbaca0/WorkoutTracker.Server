@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<LogEntry> LogEntries { get; set; }
     public DbSet<WorkoutTemplate> WorkoutTemplates { get; set; }
     public DbSet<WorkoutTemplateExercise> WorkoutTemplateExercises { get; set; }
+    public DbSet<WorkoutTemplateExerciseSet> WorkoutTemplateExerciseSets { get; set; }
     public DbSet<WorkoutPlan> WorkoutPlans { get; set; }
     public DbSet<WorkoutPlanDay> WorkoutPlanDays { get; set; }
     public DbSet<ExerciseGoal> ExerciseGoals { get; set; }
@@ -72,8 +73,10 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<WorkoutTemplateExercise>()
-            .Property(e => e.TargetReps)
-            .HasDefaultValue(0);
+            .HasMany(e => e.Sets)
+            .WithOne(s => s.WorkoutTemplateExercise)
+            .HasForeignKey(s => s.WorkoutTemplateExerciseId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ExerciseGoal>()
             .Property(g => g.CreatedAt)
@@ -87,7 +90,8 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             .HasOne(g => g.WorkoutPlan)
             .WithMany()
             .HasForeignKey(g => g.WorkoutPlanId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<ExerciseGoal>()
             .HasOne(g => g.ExerciseInfo)

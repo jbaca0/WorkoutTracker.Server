@@ -21,7 +21,11 @@ public class UserExerciseInfoService
         this.workoutPlanRepository = workoutPlanRepository;
     }
 
-    public async Task<List<UserExerciseInfo>> GetByIdsAsync(Guid? userId, List<Guid> exerciseInfoIds, Guid? excludeWorkoutId = null)
+    public async Task<List<UserExerciseInfo>> GetByIdsAsync(
+        Guid? userId,
+        List<Guid> exerciseInfoIds,
+        Guid? excludeWorkoutId = null,
+        Dictionary<Guid, List<DomainObjects.WorkoutTemplateExerciseSet>>? templateSetsByExerciseInfoId = null)
     {
         if (userId == null) return new List<UserExerciseInfo>();
 
@@ -41,25 +45,38 @@ public class UserExerciseInfoService
             var latestExercise = latestByInfoId.TryGetValue(ei.Id, out var le) ? le : null;
 
             ExerciseTarget? target = null;
-            if (goalsByInfoId.TryGetValue(ei.Id, out var goal))
+            if (goalsByInfoId.TryGetValue(ei.Id, out var goal) && goal.WorkoutPlanId.HasValue)
             {
-                if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
+                var planId = goal.WorkoutPlanId.Value;
+                if (!planCache.TryGetValue(planId, out var plan))
                 {
-                    plan = await workoutPlanRepository.GetByIdWithDetailsAsync(goal.WorkoutPlanId);
-                    planCache[goal.WorkoutPlanId] = plan;
+                    plan = await workoutPlanRepository.GetByIdWithDetailsAsync(planId);
+                    planCache[planId] = plan;
                 }
 
                 if (plan != null)
                 {
-                    var recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
-                    var setCount = latestExercise?.Sets.Count > 0 ? latestExercise.Sets.Count : 1;
-                    target = new ExerciseTarget
+                    List<TargetSet> targetSets;
+                    if (templateSetsByExerciseInfoId != null &&
+                        templateSetsByExerciseInfoId.TryGetValue(ei.Id, out var tmplSets) &&
+                        tmplSets.Count > 0)
                     {
-                        Type = TargetSource.Plan,
-                        Sets = Enumerable.Range(0, setCount)
+                        var current1RM = goal.CalculateCurrent1RM(DateTime.UtcNow, plan);
+                        targetSets = tmplSets.OrderBy(s => s.Order).Select(s =>
+                        {
+                            var weight = Math.Round(current1RM / (1 + s.Reps / 30m) / 5m) * 5m;
+                            return new TargetSet { Weight = weight, Reps = s.Reps };
+                        }).ToList();
+                    }
+                    else
+                    {
+                        var recommendation = goal.CalculateRecommendation(DateTime.UtcNow, plan);
+                        var setCount = latestExercise?.Sets.Count > 0 ? latestExercise.Sets.Count : 1;
+                        targetSets = Enumerable.Range(0, setCount)
                             .Select(_ => new TargetSet { Weight = recommendation.Weight, Reps = recommendation.Reps })
-                            .ToList()
-                    };
+                            .ToList();
+                    }
+                    target = new ExerciseTarget { Type = TargetSource.Plan, Sets = targetSets };
                 }
             }
 

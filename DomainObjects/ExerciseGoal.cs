@@ -8,7 +8,7 @@ public class ExerciseGoal
     public Guid UserId { get; set; }
     public Guid ExerciseInfoId { get; set; }
     public ExerciseInfo? ExerciseInfo { get; set; }
-    public Guid WorkoutPlanId { get; set; }
+    public Guid? WorkoutPlanId { get; set; }
     public decimal StartWeight { get; set; }
     public int StartReps { get; set; }
     public decimal TargetWeight { get; set; }
@@ -58,11 +58,10 @@ public class ExerciseGoal
     }
 
     /// <summary>
-    /// Computes the recommended weight/reps for today's session by linearly interpolating
-    /// the estimated 1RM (Epley) between the goal's start and target across the plan's
-    /// scheduled occurrences of this exercise.
+    /// Returns the linearly interpolated 1RM for today based on the goal's progression
+    /// across the plan's scheduled occurrences of this exercise.
     /// </summary>
-    public TargetSet CalculateRecommendation(DateTime today, WorkoutPlan plan)
+    public decimal CalculateCurrent1RM(DateTime today, WorkoutPlan plan)
     {
         var start1RM = StartWeight * (1 + StartReps / 30m);
         var target1RM = TargetWeight * (1 + TargetReps / 30m);
@@ -82,33 +81,41 @@ public class ExerciseGoal
             for (var date = planStart; date <= goalDate; date = date.AddDays(1))
             {
                 if (TryGetTargetReps(dayMap, date, ExerciseInfoId, out _))
-                {
                     totalOccurrences++;
-                }
             }
         }
 
-        decimal current1RM;
-        if (totalOccurrences == 0)
-        {
-            current1RM = target1RM;
-        }
-        else
-        {
-            var step1RM = (target1RM - start1RM) / totalOccurrences;
+        if (totalOccurrences == 0) return target1RM;
 
-            int sessionIndex = 0;
-            var sessionEnd = todayDate < planStart ? planStart.AddDays(-1) : todayDate;
-            for (var date = planStart; date <= sessionEnd; date = date.AddDays(1))
-            {
-                if (TryGetTargetReps(dayMap, date, ExerciseInfoId, out _))
-                {
-                    sessionIndex++;
-                }
-            }
+        var step1RM = (target1RM - start1RM) / totalOccurrences;
 
-            current1RM = Math.Min(start1RM + step1RM * sessionIndex, target1RM);
+        int sessionIndex = 0;
+        var sessionEnd = todayDate < planStart ? planStart.AddDays(-1) : todayDate;
+        for (var date = planStart; date <= sessionEnd; date = date.AddDays(1))
+        {
+            if (TryGetTargetReps(dayMap, date, ExerciseInfoId, out _))
+                sessionIndex++;
         }
+
+        return Math.Min(start1RM + step1RM * sessionIndex, target1RM);
+    }
+
+    /// <summary>
+    /// Computes the recommended weight/reps for today's session by linearly interpolating
+    /// the estimated 1RM (Epley) between the goal's start and target across the plan's
+    /// scheduled occurrences of this exercise.
+    /// </summary>
+    public TargetSet CalculateRecommendation(DateTime today, WorkoutPlan plan)
+    {
+        var current1RM = CalculateCurrent1RM(today, plan);
+
+        var goalDate = GoalDate.Date;
+        var todayDate = today.Date;
+
+        var dayMap = plan.Days
+            .Where(d => d.WorkoutTemplate != null)
+            .GroupBy(d => d.DayOfWeek)
+            .ToDictionary(g => g.Key, g => g.First());
 
         int plannedReps = StartReps > 0 ? StartReps : 1;
         for (var date = todayDate; date <= goalDate; date = date.AddDays(1))
@@ -137,7 +144,7 @@ public class ExerciseGoal
             var exercise = day.WorkoutTemplate.Exercises.FirstOrDefault(e => e.ExerciseInfoId == exerciseInfoId);
             if (exercise != null)
             {
-                targetReps = exercise.TargetReps;
+                targetReps = exercise.Sets.OrderBy(s => s.Order).FirstOrDefault()?.Reps ?? 0;
                 return true;
             }
         }

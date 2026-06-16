@@ -42,6 +42,17 @@ public class ExerciseGoalRepository
         return models.Select(DomainObjects.ExerciseGoal.FromModel).ToList();
     }
 
+    public async Task<List<DomainObjects.ExerciseGoal>> GetByPlanIdAsync(Guid userId, Guid planId)
+    {
+        var models = await dbContext.ExerciseGoals
+            .Where(g => g.UserId == userId && g.WorkoutPlanId == planId)
+            .Include(g => g.ExerciseInfo)
+            .OrderBy(g => g.CreatedAt)
+            .ToListAsync();
+
+        return models.Select(DomainObjects.ExerciseGoal.FromModel).ToList();
+    }
+
     public async Task<ExerciseGoal?> GetModelByIdAsync(Guid id)
     {
         return await dbContext.ExerciseGoals.FindAsync(id);
@@ -50,7 +61,7 @@ public class ExerciseGoalRepository
     public async Task<DomainObjects.ExerciseGoal> CreateAsync(
         Guid userId,
         Guid exerciseInfoId,
-        Guid workoutPlanId,
+        Guid? workoutPlanId,
         decimal startWeight,
         int startReps,
         decimal targetWeight,
@@ -108,6 +119,18 @@ public class ExerciseGoalRepository
         goal.TargetReps = targetReps;
         goal.GoalDate = goalDate;
 
+        await dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> AssignToPlanAsync(Guid id, Guid userId, Guid? workoutPlanId)
+    {
+        var goal = await dbContext.ExerciseGoals
+            .FirstOrDefaultAsync(g => g.Id == id && g.UserId == userId);
+
+        if (goal == null) return false;
+
+        goal.WorkoutPlanId = workoutPlanId;
         await dbContext.SaveChangesAsync();
         return true;
     }
