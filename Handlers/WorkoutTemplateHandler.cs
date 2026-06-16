@@ -78,19 +78,39 @@ public static class WorkoutTemplateHandler
         var workout = new Models.Workout { UserId = userId };
         dbContext.Workouts.Add(workout);
 
+        var templateSetsByExerciseInfoId = template.Exercises
+            .ToDictionary(
+                e => e.ExerciseInfoId,
+                e => e.Sets.Select(DomainObjects.WorkoutTemplateExerciseSet.FromModel).OrderBy(s => s.Order).ToList()
+            );
+
         var exercises = template.Exercises
             .OrderBy(e => e.Order)
-            .Select(e => new Models.Exercise
+            .Select(e =>
             {
-                WorkoutId = workout.Id,
-                ExerciseInfoId = e.ExerciseInfoId
+                var exerciseId = Guid.NewGuid();
+                return new Models.Exercise
+                {
+                    Id = exerciseId,
+                    WorkoutId = workout.Id,
+                    ExerciseInfoId = e.ExerciseInfoId,
+                    Sets = e.Sets.OrderBy(s => s.Order).Select((s, i) => new Models.Set
+                    {
+                        Id = Guid.NewGuid(),
+                        ExerciseId = exerciseId,
+                        Reps = s.Reps,
+                        Weight = 0,
+                        Completed = false,
+                        Order = i
+                    }).ToList()
+                };
             }).ToList();
 
         dbContext.Exercises.AddRange(exercises);
         await dbContext.SaveChangesAsync();
 
         var exerciseInfoIds = exercises.Select(e => e.ExerciseInfoId).ToList();
-        var userExerciseInfos = await userExerciseInfoService.GetByIdsAsync(userId, exerciseInfoIds, workout.Id);
+        var userExerciseInfos = await userExerciseInfoService.GetByIdsAsync(userId, exerciseInfoIds, workout.Id, templateSetsByExerciseInfoId);
 
         var dtoUserExerciseInfos = userExerciseInfos.Select(domain => new DataTransferObjects.Common.UserExerciseInfo
         {

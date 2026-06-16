@@ -184,10 +184,13 @@ public static class WorkoutHandler
         var recommendationsByInfoId = new Dictionary<Guid, DomainObjects.TargetSet>();
         foreach (var goal in goals)
         {
-            if (!planCache.TryGetValue(goal.WorkoutPlanId, out var plan))
+            if (!goal.WorkoutPlanId.HasValue) continue;
+            var planId = goal.WorkoutPlanId.Value;
+
+            if (!planCache.TryGetValue(planId, out var plan))
             {
-                plan = await workoutPlanRepository.GetByIdWithDetailsAsync(goal.WorkoutPlanId);
-                planCache[goal.WorkoutPlanId] = plan;
+                plan = await workoutPlanRepository.GetByIdWithDetailsAsync(planId);
+                planCache[planId] = plan;
             }
 
             if (plan != null)

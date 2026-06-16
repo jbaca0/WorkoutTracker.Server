@@ -19,10 +19,42 @@ public static class ExerciseGoalHandler
         var dtos = new List<DataTransferObjects.Common.ExerciseGoal>();
         foreach (var goal in goals)
         {
-            var plan = await planRepository.GetByIdWithDetailsAsync(goal.WorkoutPlanId);
-            var recommendation = plan != null ? goal.CalculateRecommendation(DateTime.UtcNow, plan) : null;
+            DomainObjects.TargetSet? recommendation = null;
+            if (goal.WorkoutPlanId.HasValue && goal.WorkoutPlanId != Guid.Empty)
+            {
+                var plan = await planRepository.GetByIdWithDetailsAsync(goal.WorkoutPlanId.Value);
+                recommendation = plan != null ? goal.CalculateRecommendation(DateTime.UtcNow, plan) : null;
+            }
             dtos.Add(goal.ToData(recommendation));
         }
+
+        return Results.Ok(new GetExerciseGoalsResponse { goals = dtos });
+    }
+
+    public static async Task<IResult> GetGoalsByPlan(
+        Guid planId,
+        ClaimsPrincipal user,
+        ExerciseGoalRepository goalRepository,
+        WorkoutPlanRepository planRepository)
+    {
+        var userId = user.GetUserId();
+
+        var plan = await planRepository.GetByIdAsync(planId);
+        if (plan == null) return Results.NotFound();
+        if (plan.UserId != userId) return Results.Forbid();
+
+        var goals = await goalRepository.GetByPlanIdAsync(userId, planId);
+        var planWithDetails = await planRepository.GetByIdWithDetailsAsync(planId);
+
+        var dtos = goals
+            .Select(goal =>
+            {
+                var recommendation = planWithDetails != null
+                    ? goal.CalculateRecommendation(DateTime.UtcNow, planWithDetails)
+                    : null;
+                return goal.ToData(recommendation);
+            })
+            .ToList();
 
         return Results.Ok(new GetExerciseGoalsResponse { goals = dtos });
     }
@@ -36,9 +68,12 @@ public static class ExerciseGoalHandler
     {
         var userId = user.GetUserId();
 
-        var plan = await planRepository.GetByIdAsync(request.workoutPlanId);
-        if (plan == null) return Results.NotFound();
-        if (plan.UserId != userId) return Results.Forbid();
+        if (request.workoutPlanId.HasValue)
+        {
+            var plan = await planRepository.GetByIdAsync(request.workoutPlanId.Value);
+            if (plan == null) return Results.NotFound();
+            if (plan.UserId != userId) return Results.Forbid();
+        }
 
         decimal startWeight = request.startWeight ?? 0;
         int startReps = request.startReps ?? 0;
@@ -63,8 +98,12 @@ public static class ExerciseGoalHandler
             request.targetReps,
             request.goalDate);
 
-        var planWithDetails = await planRepository.GetByIdWithDetailsAsync(request.workoutPlanId);
-        var recommendation = planWithDetails != null ? goal.CalculateRecommendation(DateTime.UtcNow, planWithDetails) : null;
+        DomainObjects.TargetSet? recommendation = null;
+        if (request.workoutPlanId.HasValue)
+        {
+            var planWithDetails = await planRepository.GetByIdWithDetailsAsync(request.workoutPlanId.Value);
+            recommendation = planWithDetails != null ? goal.CalculateRecommendation(DateTime.UtcNow, planWithDetails) : null;
+        }
 
         return Results.Ok(goal.ToData(recommendation));
     }
@@ -86,6 +125,26 @@ public static class ExerciseGoalHandler
             request.targetReps,
             request.goalDate);
 
+        return success ? Results.Ok() : Results.NotFound();
+    }
+
+    public static async Task<IResult> AssignGoalToPlan(
+        Guid id,
+        AssignGoalToPlanRequest request,
+        ClaimsPrincipal user,
+        ExerciseGoalRepository goalRepository,
+        WorkoutPlanRepository planRepository)
+    {
+        var userId = user.GetUserId();
+
+        if (request.workoutPlanId.HasValue)
+        {
+            var plan = await planRepository.GetByIdAsync(request.workoutPlanId.Value);
+            if (plan == null) return Results.NotFound();
+            if (plan.UserId != userId) return Results.Forbid();
+        }
+
+        var success = await goalRepository.AssignToPlanAsync(id, userId, request.workoutPlanId);
         return success ? Results.Ok() : Results.NotFound();
     }
 

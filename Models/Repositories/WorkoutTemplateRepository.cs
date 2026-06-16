@@ -18,6 +18,8 @@ public class WorkoutTemplateRepository
             .Where(t => t.UserId == userId)
             .Include(t => t.Exercises)
                 .ThenInclude(e => e.ExerciseInfo)
+            .Include(t => t.Exercises)
+                .ThenInclude(e => e.Sets)
             .OrderBy(t => t.CreatedDateTime)
             .ToListAsync();
 
@@ -30,6 +32,8 @@ public class WorkoutTemplateRepository
             .Where(t => t.Id == id)
             .Include(t => t.Exercises)
                 .ThenInclude(e => e.ExerciseInfo)
+            .Include(t => t.Exercises)
+                .ThenInclude(e => e.Sets)
             .FirstOrDefaultAsync();
     }
 
@@ -40,12 +44,22 @@ public class WorkoutTemplateRepository
             Id = Guid.NewGuid(),
             Name = name,
             UserId = userId,
-            Exercises = exercises.Select((e, index) => new WorkoutTemplateExercise
+            Exercises = exercises.Select((e, index) =>
             {
-                Id = Guid.NewGuid(),
-                ExerciseInfoId = e.exerciseInfoId,
-                Order = index,
-                TargetReps = e.targetReps
+                var exerciseId = Guid.NewGuid();
+                return new WorkoutTemplateExercise
+                {
+                    Id = exerciseId,
+                    ExerciseInfoId = e.exerciseInfoId,
+                    Order = index,
+                    Sets = e.sets.Select((s, setIndex) => new WorkoutTemplateExerciseSet
+                    {
+                        Id = Guid.NewGuid(),
+                        WorkoutTemplateExerciseId = exerciseId,
+                        Order = setIndex,
+                        Reps = s.reps
+                    }).ToList()
+                };
             }).ToList()
         };
 
@@ -59,19 +73,30 @@ public class WorkoutTemplateRepository
         var template = await dbContext.WorkoutTemplates
             .Where(t => t.Id == templateId)
             .Include(t => t.Exercises)
+                .ThenInclude(e => e.Sets)
             .FirstOrDefaultAsync();
 
         if (template == null) return false;
 
         template.Name = name;
         dbContext.WorkoutTemplateExercises.RemoveRange(template.Exercises);
-        template.Exercises = exercises.Select((e, index) => new WorkoutTemplateExercise
+        template.Exercises = exercises.Select((e, index) =>
         {
-            Id = Guid.NewGuid(),
-            WorkoutTemplateId = templateId,
-            ExerciseInfoId = e.exerciseInfoId,
-            Order = index,
-            TargetReps = e.targetReps
+            var exerciseId = Guid.NewGuid();
+            return new WorkoutTemplateExercise
+            {
+                Id = exerciseId,
+                WorkoutTemplateId = templateId,
+                ExerciseInfoId = e.exerciseInfoId,
+                Order = index,
+                Sets = e.sets.Select((s, setIndex) => new WorkoutTemplateExerciseSet
+                {
+                    Id = Guid.NewGuid(),
+                    WorkoutTemplateExerciseId = exerciseId,
+                    Order = setIndex,
+                    Reps = s.reps
+                }).ToList()
+            };
         }).ToList();
 
         await dbContext.SaveChangesAsync();

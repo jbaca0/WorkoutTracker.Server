@@ -7,7 +7,7 @@ public class WorkoutTemplateExercise
     public Guid ExerciseInfoId { get; set; }
     public ExerciseInfo? ExerciseInfo { get; set; }
     public int Order { get; set; }
-    public int TargetReps { get; set; }
+    public List<WorkoutTemplateExerciseSet> Sets { get; set; } = new();
 
     public static WorkoutTemplateExercise FromModel(Models.WorkoutTemplateExercise model)
     {
@@ -18,7 +18,7 @@ public class WorkoutTemplateExercise
             ExerciseInfoId = model.ExerciseInfoId,
             ExerciseInfo = model.ExerciseInfo != null ? DomainObjects.ExerciseInfo.FromModel(model.ExerciseInfo) : null,
             Order = model.Order,
-            TargetReps = model.TargetReps
+            Sets = model.Sets.Select(WorkoutTemplateExerciseSet.FromModel).ToList()
         };
     }
 
@@ -29,8 +29,7 @@ public class WorkoutTemplateExercise
             Id = Id,
             WorkoutTemplateId = WorkoutTemplateId,
             ExerciseInfoId = ExerciseInfoId,
-            Order = Order,
-            TargetReps = TargetReps
+            Order = Order
         };
     }
 
@@ -46,7 +45,7 @@ public class WorkoutTemplateExercise
                 name = ExerciseInfo.Name
             } : null,
             order = Order,
-            targetReps = TargetReps
+            sets = Sets.Select(s => s.ToData()).ToList()
         };
     }
 }

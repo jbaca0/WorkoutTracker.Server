@@ -8,5 +8,5 @@ public class WorkoutTemplateExercise
     public Guid ExerciseInfoId { get; set; }
     public ExerciseInfo ExerciseInfo { get; set; } = null!;
     public int Order { get; set; }
-    public int TargetReps { get; set; }
+    public List<WorkoutTemplateExerciseSet> Sets { get; set; } = new();
 }
