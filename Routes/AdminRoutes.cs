@@ -27,6 +27,9 @@ public static class AdminRoutes
         group.MapDelete("/users/{userId}", AdminHandler.DeleteUser)
             .WithOpenApi();
 
+        group.MapDelete("/users/{userId}/data", AdminHandler.ResetUserData)
+            .WithOpenApi();
+
         group.MapGet("/exerciseInfos", AdminHandler.GetExerciseInfos)
             .WithOpenApi();
 

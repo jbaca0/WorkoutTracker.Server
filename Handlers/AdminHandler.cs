@@ -128,6 +128,29 @@ public static class AdminHandler
         return Results.Ok();
     }
 
+    public static async Task<IResult> ResetUserData(
+        string userId,
+        UserManager<IdentityUser> userManager,
+        ApplicationDbContext dbContext)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return Results.NotFound();
+        }
+
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            return Results.BadRequest("Invalid user id.");
+        }
+
+        await dbContext.Workouts
+            .Where(w => w.UserId == userGuid)
+            .ExecuteDeleteAsync();
+
+        return Results.Ok();
+    }
+
     public static async Task<IResult> UpdateUserRoles(
         string userId,
         UpdateUserRolesRequest request,
