@@ -262,7 +262,7 @@ namespace WorkoutTracker.Server.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("WorkoutPlanId")
+                    b.Property<Guid?>("WorkoutPlanId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -511,11 +511,6 @@ namespace WorkoutTracker.Server.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("TargetReps")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
                     b.Property<Guid>("WorkoutTemplateId")
                         .HasColumnType("TEXT");
 
@@ -526,6 +521,28 @@ namespace WorkoutTracker.Server.Migrations
                     b.HasIndex("WorkoutTemplateId");
 
                     b.ToTable("WorkoutTemplateExercises");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplateExerciseSet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Reps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("WorkoutTemplateExerciseId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkoutTemplateExerciseId");
+
+                    b.ToTable("WorkoutTemplateExerciseSets");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -609,8 +626,7 @@ namespace WorkoutTracker.Server.Migrations
                     b.HasOne("WorkoutTracker.Server.Models.WorkoutPlan", "WorkoutPlan")
                         .WithMany()
                         .HasForeignKey("WorkoutPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ExerciseInfo");
 
@@ -675,6 +691,17 @@ namespace WorkoutTracker.Server.Migrations
                     b.Navigation("WorkoutTemplate");
                 });
 
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplateExerciseSet", b =>
+                {
+                    b.HasOne("WorkoutTracker.Server.Models.WorkoutTemplateExercise", "WorkoutTemplateExercise")
+                        .WithMany("Sets")
+                        .HasForeignKey("WorkoutTemplateExerciseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkoutTemplateExercise");
+                });
+
             modelBuilder.Entity("WorkoutTracker.Server.Models.Exercise", b =>
                 {
                     b.Navigation("Sets");
@@ -693,6 +720,11 @@ namespace WorkoutTracker.Server.Migrations
             modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplate", b =>
                 {
                     b.Navigation("Exercises");
+                });
+
+            modelBuilder.Entity("WorkoutTracker.Server.Models.WorkoutTemplateExercise", b =>
+                {
+                    b.Navigation("Sets");
                 });
 #pragma warning restore 612, 618
         }
