@@ -76,12 +76,13 @@ public static class WorkoutPlanHandler
     }
 
     public static async Task<IResult> GetTodaysWorkout(
+        int? dayOfWeek,
         ClaimsPrincipal user,
         WorkoutPlanRepository planRepository)
     {
         var userId = user.GetUserId();
-        var dayOfWeek = (int)DateTime.UtcNow.DayOfWeek;
-        var planDay = await planRepository.GetTodaysPlanDayAsync(userId, dayOfWeek);
+        var resolvedDayOfWeek = dayOfWeek ?? (int)DateTime.UtcNow.DayOfWeek;
+        var planDay = await planRepository.GetTodaysPlanDayAsync(userId, resolvedDayOfWeek);
 
         if (planDay == null)
         {
