@@ -11,6 +11,7 @@ using WorkoutTracker.Server.Models;
 using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Services;
 using WorkoutTracker.Server.DomainObjects;
+using WorkoutTracker.Server.Enums;
 
 
 namespace WorkoutTracker.Server.Handlers;
@@ -96,16 +97,9 @@ public static class WorkoutHandler
                 id = domain.ExerciseInfo.Id,
                 name = domain.ExerciseInfo.Name
             },
-            latestExercise = domain.LatestExercise != null ? new DataTransferObjects.Common.Exercise
-            {
-                exerciseInfoId = domain.LatestExercise.ExerciseInfoId,
-                sets = domain.LatestExercise.Sets.Select(s => new DataTransferObjects.Common.Set
-                {
-                    reps = s.Reps,
-                    weight = s.Weight,
-                    order = s.Order
-                }).ToList()
-            } : null
+            bestSetWeight = domain.BestSetWeight,
+            bestSetReps = domain.BestSetReps,
+            target = domain.Target?.ToData()
         }).ToList();
 
         var response = new AddExercisesResponse()
@@ -163,7 +157,9 @@ public static class WorkoutHandler
         Guid workoutId,
         ClaimsPrincipal user,
         WorkoutRepository workoutRepository,
-        ExerciseRepository exerciseRepository)
+        ExerciseRepository exerciseRepository,
+        ExerciseGoalRepository exerciseGoalRepository,
+        WorkoutPlanRepository workoutPlanRepository)
     {
         var workout = await workoutRepository.GetWorkoutWithDetailsAsync(workoutId);
 
@@ -178,6 +174,30 @@ public static class WorkoutHandler
             ? await exerciseRepository.GetLatestExercisesForUserAsync(userId, exerciseInfoIds)
             : new List<DomainObjects.Exercise>();
         var previousByInfoId = previousExercises.ToDictionary(e => e.ExerciseInfoId);
+
+        var goals = exerciseInfoIds.Count > 0
+            ? await exerciseGoalRepository.GetByExerciseInfoIdsAsync(userId, exerciseInfoIds)
+            : new List<DomainObjects.ExerciseGoal>();
+        var goalsByInfoId = goals.ToDictionary(g => g.ExerciseInfoId);
+
+        var planCache = new Dictionary<Guid, DomainObjects.WorkoutPlan?>();
+        var recommendationsByInfoId = new Dictionary<Guid, DomainObjects.TargetSet>();
+        foreach (var goal in goals)
+        {
+            if (!goal.WorkoutPlanId.HasValue) continue;
+            var planId = goal.WorkoutPlanId.Value;
+
+            if (!planCache.TryGetValue(planId, out var plan))
+            {
+                plan = await workoutPlanRepository.GetByIdWithDetailsAsync(planId);
+                planCache[planId] = plan;
+            }
+
+            if (plan != null)
+            {
+                recommendationsByInfoId[goal.ExerciseInfoId] = goal.CalculateRecommendation(DateTime.UtcNow, plan);
+            }
+        }
 
         var workoutDto = new DataTransferObjects.Common.Workout
         {
@@ -203,18 +223,24 @@ public static class WorkoutHandler
                     }).ToList()
                 };
 
-                if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev))
+                if (recommendationsByInfoId.TryGetValue(e.ExerciseInfoId, out var recommendation))
                 {
-                    exerciseDto.previousExercise = new DataTransferObjects.Common.Exercise
+                    var setCount = exerciseDto.sets.Count > 0 ? exerciseDto.sets.Count : 1;
+                    exerciseDto.target = new DomainObjects.ExerciseTarget
                     {
-                        exerciseInfoId = prev.ExerciseInfoId,
-                        sets = prev.Sets.Select(s => new DataTransferObjects.Common.Set
-                        {
-                            reps = s.Reps,
-                            weight = s.Weight,
-                            order = s.Order
-                        }).ToList()
-                    };
+                        Type = TargetSource.Plan,
+                        Sets = Enumerable.Range(0, setCount)
+                            .Select(_ => new DomainObjects.TargetSet { Weight = recommendation.Weight, Reps = recommendation.Reps })
+                            .ToList()
+                    }.ToData();
+                }
+                else if (previousByInfoId.TryGetValue(e.ExerciseInfoId, out var prev) && prev.Sets.Count > 0)
+                {
+                    exerciseDto.target = new DomainObjects.ExerciseTarget
+                    {
+                        Type = TargetSource.Previous,
+                        Sets = prev.Sets.Select(s => new DomainObjects.TargetSet { Weight = s.Weight, Reps = s.Reps }).ToList()
+                    }.ToData();
                 }
 
                 return exerciseDto;

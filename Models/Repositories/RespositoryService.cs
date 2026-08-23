@@ -10,6 +10,9 @@ public static class RespositoryService
         services.AddScoped<ExerciseInfoRepository>();
         services.AddScoped<ExerciseRepository>();
         services.AddScoped<LogEntryRepository>();
+        services.AddScoped<WorkoutTemplateRepository>();
+        services.AddScoped<WorkoutPlanRepository>();
+        services.AddScoped<ExerciseGoalRepository>();
 
         return services;
     }
