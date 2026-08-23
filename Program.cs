@@ -106,5 +106,8 @@ app.MapAuthRoutes();
 app.MapWorkoutRoutes();
 app.MapExerciseInfoRoutes();
 app.MapAdminRoutes();
+app.MapWorkoutTemplateRoutes();
+app.MapWorkoutPlanRoutes();
+app.MapExerciseGoalRoutes();
 
 app.Run();
