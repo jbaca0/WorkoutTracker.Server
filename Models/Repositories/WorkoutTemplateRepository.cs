@@ -108,6 +108,18 @@ public class WorkoutTemplateRepository
         var template = await dbContext.WorkoutTemplates.FindAsync(id);
         if (template == null) return false;
 
+        // WorkoutPlanDay.WorkoutTemplateId is an optional FK with no cascade, so
+        // the delete would be rejected while any plan day still references this
+        // template. Clear those days first, leaving the day itself intact.
+        var referencingDays = await dbContext.WorkoutPlanDays
+            .Where(d => d.WorkoutTemplateId == id)
+            .ToListAsync();
+
+        foreach (var day in referencingDays)
+        {
+            day.WorkoutTemplateId = null;
+        }
+
         dbContext.WorkoutTemplates.Remove(template);
         await dbContext.SaveChangesAsync();
         return true;
