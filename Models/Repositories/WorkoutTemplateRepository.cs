@@ -79,8 +79,18 @@ public class WorkoutTemplateRepository
         if (template == null) return false;
 
         template.Name = name;
-        dbContext.WorkoutTemplateExercises.RemoveRange(template.Exercises);
-        template.Exercises = exercises.Select((e, index) =>
+
+        // Materialise before removing. Marking a dependent Deleted makes EF fix up
+        // the parent's navigation collection, so passing that live collection to
+        // RemoveRange enumerates it while EF is mutating it.
+        var existingExercises = template.Exercises.ToList();
+        foreach (var exercise in existingExercises)
+        {
+            dbContext.WorkoutTemplateExerciseSets.RemoveRange(exercise.Sets.ToList());
+        }
+        dbContext.WorkoutTemplateExercises.RemoveRange(existingExercises);
+
+        var replacements = exercises.Select((e, index) =>
         {
             var exerciseId = Guid.NewGuid();
             return new WorkoutTemplateExercise
@@ -98,6 +108,10 @@ public class WorkoutTemplateRepository
                 }).ToList()
             };
         }).ToList();
+
+        // Added through the DbSet rather than by reassigning template.Exercises,
+        // which would sever the old relationships that are already marked Deleted.
+        dbContext.WorkoutTemplateExercises.AddRange(replacements);
 
         await dbContext.SaveChangesAsync();
         return true;
