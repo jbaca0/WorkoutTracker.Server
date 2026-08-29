@@ -83,8 +83,11 @@ public class WorkoutPlanRepository
         plan.Name = name;
         plan.StartDate = startDate;
         plan.EndDate = endDate;
-        dbContext.WorkoutPlanDays.RemoveRange(plan.Days);
-        plan.Days = days.Select(d => new WorkoutPlanDay
+
+        // Materialise before removing; see WorkoutTemplateRepository.UpdateAsync.
+        dbContext.WorkoutPlanDays.RemoveRange(plan.Days.ToList());
+
+        var replacements = days.Select(d => new WorkoutPlanDay
         {
             Id = Guid.NewGuid(),
             WorkoutPlanId = planId,
@@ -92,6 +95,8 @@ public class WorkoutPlanRepository
             WorkoutTemplateId = d.workoutTemplateId,
             Note = d.note
         }).ToList();
+
+        dbContext.WorkoutPlanDays.AddRange(replacements);
 
         await dbContext.SaveChangesAsync();
         return true;
