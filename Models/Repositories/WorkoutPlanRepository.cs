@@ -44,12 +44,17 @@ public class WorkoutPlanRepository
 
     public async Task<Guid> AddAsync(Guid userId, string name, DateTime startDate, DateTime? endDate, List<WorkoutPlanDayRequest> days)
     {
+        // Activate automatically when the user has nothing active, so a first plan
+        // shows up on the home screen without a separate "Set Active" step.
+        var hasActivePlan = await dbContext.WorkoutPlans
+            .AnyAsync(p => p.UserId == userId && p.IsActive);
+
         var plan = new WorkoutPlan
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             Name = name,
-            IsActive = false,
+            IsActive = !hasActivePlan,
             StartDate = startDate,
             EndDate = endDate,
             Days = days.Select(d => new WorkoutPlanDay
@@ -78,8 +83,11 @@ public class WorkoutPlanRepository
         plan.Name = name;
         plan.StartDate = startDate;
         plan.EndDate = endDate;
-        dbContext.WorkoutPlanDays.RemoveRange(plan.Days);
-        plan.Days = days.Select(d => new WorkoutPlanDay
+
+        // Materialise before removing; see WorkoutTemplateRepository.UpdateAsync.
+        dbContext.WorkoutPlanDays.RemoveRange(plan.Days.ToList());
+
+        var replacements = days.Select(d => new WorkoutPlanDay
         {
             Id = Guid.NewGuid(),
             WorkoutPlanId = planId,
@@ -87,6 +95,8 @@ public class WorkoutPlanRepository
             WorkoutTemplateId = d.workoutTemplateId,
             Note = d.note
         }).ToList();
+
+        dbContext.WorkoutPlanDays.AddRange(replacements);
 
         await dbContext.SaveChangesAsync();
         return true;
