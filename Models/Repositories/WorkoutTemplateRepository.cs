@@ -79,8 +79,18 @@ public class WorkoutTemplateRepository
         if (template == null) return false;
 
         template.Name = name;
-        dbContext.WorkoutTemplateExercises.RemoveRange(template.Exercises);
-        template.Exercises = exercises.Select((e, index) =>
+
+        // Materialise before removing. Marking a dependent Deleted makes EF fix up
+        // the parent's navigation collection, so passing that live collection to
+        // RemoveRange enumerates it while EF is mutating it.
+        var existingExercises = template.Exercises.ToList();
+        foreach (var exercise in existingExercises)
+        {
+            dbContext.WorkoutTemplateExerciseSets.RemoveRange(exercise.Sets.ToList());
+        }
+        dbContext.WorkoutTemplateExercises.RemoveRange(existingExercises);
+
+        var replacements = exercises.Select((e, index) =>
         {
             var exerciseId = Guid.NewGuid();
             return new WorkoutTemplateExercise
@@ -99,6 +109,10 @@ public class WorkoutTemplateRepository
             };
         }).ToList();
 
+        // Added through the DbSet rather than by reassigning template.Exercises,
+        // which would sever the old relationships that are already marked Deleted.
+        dbContext.WorkoutTemplateExercises.AddRange(replacements);
+
         await dbContext.SaveChangesAsync();
         return true;
     }
@@ -107,6 +121,18 @@ public class WorkoutTemplateRepository
     {
         var template = await dbContext.WorkoutTemplates.FindAsync(id);
         if (template == null) return false;
+
+        // WorkoutPlanDay.WorkoutTemplateId is an optional FK with no cascade, so
+        // the delete would be rejected while any plan day still references this
+        // template. Clear those days first, leaving the day itself intact.
+        var referencingDays = await dbContext.WorkoutPlanDays
+            .Where(d => d.WorkoutTemplateId == id)
+            .ToListAsync();
+
+        foreach (var day in referencingDays)
+        {
+            day.WorkoutTemplateId = null;
+        }
 
         dbContext.WorkoutTemplates.Remove(template);
         await dbContext.SaveChangesAsync();
