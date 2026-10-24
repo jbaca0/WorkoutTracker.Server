@@ -418,8 +418,9 @@ public class WorkoutTemplateHandlerTests
         info.target.Should().BeNull();
     }
 
+    // Failing on purpose: see jbaca0/WorkoutTracker.Server#15.
     [Fact]
-    public async Task StartWorkoutFromTemplate_WithNoHistory_ReportsAZeroBestSetFromTheSetsItJustCreated()
+    public async Task StartWorkoutFromTemplate_WithNoHistory_ReportsNoBestSet()
     {
         var dbContext = DbContextFactory.CreateInMemory();
         var userId = Guid.NewGuid();
@@ -437,13 +438,12 @@ public class WorkoutTemplateHandlerTests
         var ok = result.Should().BeOfType<Ok<StartWorkoutFromTemplateResponse>>().Subject;
         var info = ok.Value!.userExerciseInfos.Should().ContainSingle().Subject;
 
-        // Current behaviour, and arguably wrong: the handler saves the new workout's
-        // blank Weight = 0 sets before asking for the best set, and
-        // GetBestSetByEpleyAsync takes no excludeWorkoutId the way
-        // GetLatestExercisesForUserAsync does. A user with no history for the exercise
-        // therefore gets 0 rather than no best set at all. Flip this test if the
-        // exclusion is added.
-        info.bestSetWeight.Should().Be(0m);
-        info.bestSetReps.Should().Be(5);
+        // The user has never performed this exercise, so there is no best set to report.
+        // The handler saves the new workout's blank Weight = 0 sets before asking for one,
+        // and GetBestSetByEpleyAsync takes no excludeWorkoutId the way
+        // GetLatestExercisesForUserAsync does, so it counts the sets it just created and
+        // answers 0 x 5 reps.
+        info.bestSetWeight.Should().BeNull();
+        info.bestSetReps.Should().BeNull();
     }
 }
