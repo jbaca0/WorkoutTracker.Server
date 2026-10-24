@@ -13,7 +13,9 @@ public class UserExerciseInfoServiceTests
     {
         var dbContext = DbContextFactory.CreateInMemory();
         var exerciseRepository = new ExerciseRepository(dbContext);
-        var service = new UserExerciseInfoService(exerciseRepository);
+        var exerciseGoalRepository = new ExerciseGoalRepository(dbContext);
+        var workoutPlanRepository = new WorkoutPlanRepository(dbContext);
+        var service = new UserExerciseInfoService(exerciseRepository, exerciseGoalRepository, workoutPlanRepository);
 
         var result = await service.GetByIdsAsync(null, new List<Guid> { Guid.NewGuid() });
 
@@ -25,7 +27,9 @@ public class UserExerciseInfoServiceTests
     {
         var dbContext = DbContextFactory.CreateInMemory();
         var exerciseRepository = new ExerciseRepository(dbContext);
-        var service = new UserExerciseInfoService(exerciseRepository);
+        var exerciseGoalRepository = new ExerciseGoalRepository(dbContext);
+        var workoutPlanRepository = new WorkoutPlanRepository(dbContext);
+        var service = new UserExerciseInfoService(exerciseRepository, exerciseGoalRepository, workoutPlanRepository);
         var userId = Guid.NewGuid();
         var exerciseInfoIds = new List<Guid> { Guid.NewGuid() };
 
@@ -77,7 +81,9 @@ public class UserExerciseInfoServiceTests
         await dbContext.SaveChangesAsync();
 
         var exerciseRepository = new ExerciseRepository(dbContext);
-        var service = new UserExerciseInfoService(exerciseRepository);
+        var exerciseGoalRepository = new ExerciseGoalRepository(dbContext);
+        var workoutPlanRepository = new WorkoutPlanRepository(dbContext);
+        var service = new UserExerciseInfoService(exerciseRepository, exerciseGoalRepository, workoutPlanRepository);
 
         var result = await service.GetByIdsAsync(userId, new List<Guid> { exerciseInfoId });
 
@@ -123,7 +129,9 @@ public class UserExerciseInfoServiceTests
         await dbContext.SaveChangesAsync();
 
         var exerciseRepository = new ExerciseRepository(dbContext);
-        var service = new UserExerciseInfoService(exerciseRepository);
+        var exerciseGoalRepository = new ExerciseGoalRepository(dbContext);
+        var workoutPlanRepository = new WorkoutPlanRepository(dbContext);
+        var service = new UserExerciseInfoService(exerciseRepository, exerciseGoalRepository, workoutPlanRepository);
 
         var result = await service.GetByIdsAsync(userId, new List<Guid> { exerciseInfoId });
 
