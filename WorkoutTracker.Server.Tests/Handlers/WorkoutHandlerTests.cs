@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using WorkoutTracker.Server.DataTransferObjects.Requests;
 using WorkoutTracker.Server.DataTransferObjects.Responses;
 using WorkoutTracker.Server.DataTransferObjects.Responses.Workout;
+using WorkoutTracker.Server.Enums;
 using WorkoutTracker.Server.Handlers;
 using WorkoutTracker.Server.Models.Repositories;
 using WorkoutTracker.Server.Services;
@@ -19,6 +20,12 @@ public class WorkoutHandlerTests
 
     private static Models.ExerciseInfo MakeExerciseInfo(string name = "Bench Press") =>
         new() { Id = Guid.NewGuid(), Name = name, SecondaryMuscleGroupsJson = "[]" };
+
+    private static UserExerciseInfoService MakeUserExerciseInfoService(Models.ApplicationDbContext dbContext) =>
+        new(
+            new ExerciseRepository(dbContext),
+            new ExerciseGoalRepository(dbContext),
+            new WorkoutPlanRepository(dbContext));
 
     // --- AddWorkout ---
 
@@ -153,7 +160,7 @@ public class WorkoutHandlerTests
             request,
             ClaimsPrincipalBuilder.WithUserId(Guid.NewGuid()),
             new WorkoutRepository(dbContext),
-            new UserExerciseInfoService(new ExerciseRepository(dbContext)));
+            MakeUserExerciseInfoService(dbContext));
 
         result.Should().BeOfType<BadRequest>();
     }
@@ -172,7 +179,7 @@ public class WorkoutHandlerTests
             request,
             ClaimsPrincipalBuilder.WithUserId(Guid.NewGuid()),
             new WorkoutRepository(dbContext),
-            new UserExerciseInfoService(new ExerciseRepository(dbContext)));
+            MakeUserExerciseInfoService(dbContext));
 
         result.Should().BeOfType<BadRequest>();
     }
@@ -198,7 +205,7 @@ public class WorkoutHandlerTests
             request,
             ClaimsPrincipalBuilder.WithUserId(userId),
             new WorkoutRepository(dbContext),
-            new UserExerciseInfoService(new ExerciseRepository(dbContext)));
+            MakeUserExerciseInfoService(dbContext));
 
         var ok = result.Should().BeOfType<Ok<AddExercisesResponse>>().Subject;
         ok.Value!.userExerciseInfos.Should().ContainSingle();
@@ -207,7 +214,7 @@ public class WorkoutHandlerTests
     }
 
     [Fact]
-    public async Task AddExercises_ReturnsLatestExerciseFromPreviousWorkout_ExcludingCurrentWorkout()
+    public async Task AddExercises_TargetsSetsFromPreviousWorkout_ExcludingCurrentWorkout()
     {
         var dbContext = DbContextFactory.CreateInMemory();
         var userId = Guid.NewGuid();
@@ -250,14 +257,15 @@ public class WorkoutHandlerTests
             request,
             ClaimsPrincipalBuilder.WithUserId(userId),
             new WorkoutRepository(dbContext),
-            new UserExerciseInfoService(new ExerciseRepository(dbContext)));
+            MakeUserExerciseInfoService(dbContext));
 
         var ok = result.Should().BeOfType<Ok<AddExercisesResponse>>().Subject;
         var info = ok.Value!.userExerciseInfos.Should().ContainSingle().Subject;
-        info.latestExercise.Should().NotBeNull();
-        info.latestExercise!.sets.Should().ContainSingle();
-        info.latestExercise.sets[0].reps.Should().Be(8);
-        info.latestExercise.sets[0].weight.Should().Be(185m);
+        info.target.Should().NotBeNull();
+        info.target!.type.Should().Be(TargetSource.Previous);
+        info.target.sets.Should().ContainSingle();
+        info.target.sets[0].reps.Should().Be(8);
+        info.target.sets[0].weight.Should().Be(185m);
     }
 
     // --- Save ---
@@ -416,7 +424,9 @@ public class WorkoutHandlerTests
             Guid.NewGuid(),
             ClaimsPrincipalBuilder.WithUserId(Guid.NewGuid()),
             new WorkoutRepository(dbContext),
-            new ExerciseRepository(dbContext));
+            new ExerciseRepository(dbContext),
+            new ExerciseGoalRepository(dbContext),
+            new WorkoutPlanRepository(dbContext));
 
         result.Should().BeOfType<NotFound>();
     }
@@ -452,7 +462,9 @@ public class WorkoutHandlerTests
             workout.Id,
             ClaimsPrincipalBuilder.WithUserId(userId),
             new WorkoutRepository(dbContext),
-            new ExerciseRepository(dbContext));
+            new ExerciseRepository(dbContext),
+            new ExerciseGoalRepository(dbContext),
+            new WorkoutPlanRepository(dbContext));
 
         var ok = result.Should().BeOfType<Ok<GetWorkoutDetailResponse>>().Subject;
         ok.Value!.workout.id.Should().Be(workout.Id);
@@ -465,14 +477,14 @@ public class WorkoutHandlerTests
     }
 
     [Fact]
-    public async Task GetWorkoutDetail_PopulatesPreviousExerciseFromUsersLatestExerciseOfSameType()
+    public async Task GetWorkoutDetail_TargetsUsersLatestExerciseOfSameType()
     {
         var dbContext = DbContextFactory.CreateInMemory();
         var userId = Guid.NewGuid();
         var exerciseInfo = MakeExerciseInfo();
 
-        // The "previous exercise" lookup picks the user's most recent exercise
-        // for the same exerciseInfoId across all of their workouts.
+        // With no plan-backed goal, the target falls back to the user's most recent
+        // exercise for the same exerciseInfoId across all of their workouts.
         var latestWorkout = new Models.Workout
         {
             Id = Guid.NewGuid(),
@@ -511,13 +523,16 @@ public class WorkoutHandlerTests
             currentWorkout.Id,
             ClaimsPrincipalBuilder.WithUserId(userId),
             new WorkoutRepository(dbContext),
-            new ExerciseRepository(dbContext));
+            new ExerciseRepository(dbContext),
+            new ExerciseGoalRepository(dbContext),
+            new WorkoutPlanRepository(dbContext));
 
         var ok = result.Should().BeOfType<Ok<GetWorkoutDetailResponse>>().Subject;
         var exerciseDto = ok.Value!.workout.exercises.Should().ContainSingle().Subject;
-        exerciseDto.previousExercise.Should().NotBeNull();
-        exerciseDto.previousExercise!.sets.Should().ContainSingle();
-        exerciseDto.previousExercise.sets[0].reps.Should().Be(12);
-        exerciseDto.previousExercise.sets[0].weight.Should().Be(60m);
+        exerciseDto.target.Should().NotBeNull();
+        exerciseDto.target!.type.Should().Be(TargetSource.Previous);
+        exerciseDto.target.sets.Should().ContainSingle();
+        exerciseDto.target.sets[0].reps.Should().Be(12);
+        exerciseDto.target.sets[0].weight.Should().Be(60m);
     }
 }
