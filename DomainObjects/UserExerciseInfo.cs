@@ -10,6 +10,9 @@ public class UserExerciseInfo
     public int? MaxReps { get; set; }
     public DateTime? LastPerformed { get; set; }
     public int TotalSessions { get; set; }
+    public decimal? BestSetWeight { get; set; }
+    public int? BestSetReps { get; set; }
+    public ExerciseTarget? Target { get; set; }
 
     public void CalculateBestStats()
     {

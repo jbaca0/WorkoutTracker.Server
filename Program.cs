@@ -13,6 +13,12 @@ using WorkoutTracker.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsDevelopment())
+{
+    // Gitignored, machine-local dev settings (e.g. DevSeed credentials).
+    builder.Configuration.AddJsonFile("appsettings.Development.local.json", optional: true, reloadOnChange: true);
+}
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -106,5 +112,8 @@ app.MapAuthRoutes();
 app.MapWorkoutRoutes();
 app.MapExerciseInfoRoutes();
 app.MapAdminRoutes();
+app.MapWorkoutTemplateRoutes();
+app.MapWorkoutPlanRoutes();
+app.MapExerciseGoalRoutes();
 
 app.Run();
