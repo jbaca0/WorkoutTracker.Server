@@ -39,5 +39,10 @@ public static class DatabaseInitializer
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
+
+        if (app.Environment.IsDevelopment())
+        {
+            await DevDataSeeder.SeedDevUserAsync(scope.ServiceProvider, app.Configuration, app.Logger);
+        }
     }
 }
