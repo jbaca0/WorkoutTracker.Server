@@ -2,3 +2,4 @@ bin/
 obj/
 WorkoutTracker.db
 WorkoutTracker.db*
+appsettings.Development.local.json
