@@ -48,7 +48,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Configure JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"]!;
+// No signing key is committed. It comes from App Service configuration (Jwt__Secret)
+// in production and from the gitignored appsettings.Development.local.json locally.
+// Failing fast is deliberate: a missing key must not silently fall back to a known value.
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret) || Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Secret is missing or shorter than 32 bytes. Set it via the Jwt__Secret environment " +
+        "variable (App Service configuration) or in appsettings.Development.local.json.");
+}
+
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var jwtAudience = builder.Configuration["Jwt:Audience"]!;
 
