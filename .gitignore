@@ -3,3 +3,6 @@ obj/
 WorkoutTracker.db
 WorkoutTracker.db*
 appsettings.Development.local.json
+
+# macOS
+.DS_Store
