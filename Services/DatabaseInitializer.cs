@@ -19,6 +19,9 @@ public static class DatabaseInitializer
             await roleManager.CreateAsync(new IdentityRole("Admin"));
         }
 
+        // Admin credentials come from configuration only; there is no committed default.
+        // In production these are App Service settings (AdminSeed__Email / AdminSeed__Password),
+        // locally they belong in the gitignored appsettings.Development.local.json.
         var adminEmail = app.Configuration["AdminSeed:Email"];
         var adminPassword = app.Configuration["AdminSeed:Password"];
         if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
@@ -33,11 +36,52 @@ public static class DatabaseInitializer
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
+                else
+                {
+                    app.Logger.LogWarning("Admin seed user creation failed: {Errors}",
+                        string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
             }
-            else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+            else
             {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+
+                // Keep the configured password authoritative. Without this, changing
+                // AdminSeed:Password has no effect on an account that already exists,
+                // and there is no password-reset endpoint to fall back on.
+                // RemovePassword/AddPassword rather than ResetPasswordAsync: the latter
+                // needs a token provider, which AddIdentity does not register.
+                if (!await userManager.CheckPasswordAsync(adminUser, adminPassword))
+                {
+                    var removed = await userManager.RemovePasswordAsync(adminUser);
+                    if (removed.Succeeded)
+                    {
+                        var added = await userManager.AddPasswordAsync(adminUser, adminPassword);
+                        if (added.Succeeded)
+                        {
+                            app.Logger.LogInformation("Admin seed password for {Email} updated from configuration", adminEmail);
+                        }
+                        else
+                        {
+                            app.Logger.LogWarning("Admin seed password update failed: {Errors}",
+                                string.Join(", ", added.Errors.Select(e => e.Description)));
+                        }
+                    }
+                    else
+                    {
+                        app.Logger.LogWarning("Admin seed password removal failed: {Errors}",
+                            string.Join(", ", removed.Errors.Select(e => e.Description)));
+                    }
+                }
             }
+        }
+        else
+        {
+            app.Logger.LogInformation(
+                "AdminSeed:Email/Password not configured; no admin account was seeded.");
         }
 
         if (app.Environment.IsDevelopment())
